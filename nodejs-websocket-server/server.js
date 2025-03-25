@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
+//CROS setting
 const io = new Server(server, {
     cors: {
         origin: "http://localhost:3001", // 允許的前端來源
@@ -28,5 +29,5 @@ io.on('connection', socket => {
 });
 
 server.listen(3000, () => {
-    console.log('WebSocket server started on http://localhost:3000');
+    console.log('socket io server started on http://localhost:3000');
 });
