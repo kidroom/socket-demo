@@ -1,10 +1,10 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
+const onlineUsers = new Map();
 //CROS setting
 const io = new Server(server, {
     cors: {
@@ -16,15 +16,26 @@ const io = new Server(server, {
 });
 
 io.on('connection', socket => {
-    console.log('Client connected');
+    console.log("連線成功:", socket.id);
 
-    socket.on('chat message', message => {
-        console.log(`Received: ${message}`);
-        io.emit('chat message', `Server received: ${message}`); // 向所有客戶端廣播訊息
+    socket.on("login", (userId) => {
+        onlineUsers.set(userId, socket.id);
     });
 
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
+    socket.on("send_message", ({ sender, receive, content }) => {
+        console.log(`成功取得${sender}訊息:${content}`)
+        const targetSocketId = onlineUsers.get(receive);
+        if (targetSocketId) {
+            socket.to(targetSocketId).emit("receive_message", { sender: sender, receive: receive, content: content });
+            console.log(`成功取推播${targetSocketId}的訊息:${content}`)
+        }
+    });
+
+    socket.on("disconnect", () => {
+        console.log("使用者離線:", socket.id);
+        for (const [key, value] of onlineUsers.entries()) {
+            if (value === socket.id) onlineUsers.delete(key);
+        }
     });
 });
 

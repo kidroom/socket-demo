@@ -7,7 +7,7 @@ export default function Home() {
   const router = useRouter();
 
   const GotoChat = () => {
-    router.push("/chat");
+    router.push("/chat_login");
   };
 
   return (
