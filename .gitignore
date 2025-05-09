@@ -4,3 +4,4 @@ next-socket-demo/.next
 backend-login/node_modules
 backend-login/package-lock.json
 nodejs-websocket-server/package-lock.json
+node_modules

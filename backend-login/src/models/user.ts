@@ -12,28 +12,34 @@ import {
 // 1. 定義屬性型別
 interface UserAttributes {
   id: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  status: Date;
+  account: string;
+  password: string;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  status: number;
   createDate: Date;
-  updateDate?: Date;
-  deleteDate?: Date;
+  updateDate?: Date | null;
+  deleteDate?: Date | null;
 }
+interface UserCreationAttributes
+  extends Optional<UserAttributes, "id" | "createDate"> {}
 
 // 2. 建立 Sequelize model class
 export class User
-  extends Model<InferAttributes<User>, InferCreationAttributes<User>>
+  extends Model<InferAttributes<User>, UserCreationAttributes>
   implements UserAttributes
 {
   declare id: string;
-  declare name?: string;
-  declare email?: string;
-  declare phone?: string;
-  declare status: Date;
+  declare account: string;
+  declare password: string;
+  declare name?: string | null;
+  declare email?: string | null;
+  declare phone?: string | null;
+  declare status: number;
   declare createDate: Date;
-  declare updateDate?: Date;
-  declare deleteDate?: Date;
+  declare updateDate?: Date | null;
+  declare deleteDate?: Date | null;
 
   // static associate(models: any) {
   //   // 定義關聯
@@ -50,6 +56,14 @@ export function initUserModel(sequelize: Sequelize): typeof User {
         allowNull: false,
         primaryKey: true,
       },
+      account: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       name: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -63,9 +77,9 @@ export function initUserModel(sequelize: Sequelize): typeof User {
         allowNull: true,
       },
       status: {
-        type: DataTypes.DATE,
+        type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
+        defaultValue: 0,
       },
       createDate: {
         type: DataTypes.DATE,
