@@ -18,12 +18,12 @@ interface UserAttributes {
   email?: string | null;
   phone?: string | null;
   status: number;
-  createDate: Date;
-  updateDate?: Date | null;
-  deleteDate?: Date | null;
+  createdAt: Date;
+  updatedAt?: Date | null;
+  deletedAt?: Date | null;
 }
 interface UserCreationAttributes
-  extends Optional<UserAttributes, "id" | "createDate"> {}
+  extends Optional<UserAttributes, "id" | "createdAt"> {}
 
 // 2. 建立 Sequelize model class
 export class User
@@ -37,9 +37,9 @@ export class User
   declare email?: string | null;
   declare phone?: string | null;
   declare status: number;
-  declare createDate: Date;
-  declare updateDate?: Date | null;
-  declare deleteDate?: Date | null;
+  declare createdAt: Date;
+  declare updatedAt?: Date | null;
+  declare deletedAt?: Date | null;
 
   // static associate(models: any) {
   //   // 定義關聯
@@ -81,25 +81,25 @@ export function initUserModel(sequelize: Sequelize): typeof User {
         allowNull: false,
         defaultValue: 0,
       },
-      createDate: {
+      createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
-      updateDate: {
+      updatedAt: {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      deleteDate: {
+      deletedAt: {
         type: DataTypes.DATE,
         allowNull: true,
       },
     },
     {
       sequelize,
-      modelName: "User",
+      modelName: "user",
       freezeTableName: true,
-      timestamps: false, // 你有自定義 createDate/updateDate，因此關掉 Sequelize 自動的 createdAt/updatedAt
+      timestamps: false, // 你有自定義 createdAt/updatedAt，因此關掉 Sequelize 自動的 createdAt/updatedAt
     }
   );
 
