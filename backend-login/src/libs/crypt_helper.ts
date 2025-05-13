@@ -7,7 +7,7 @@ const SALT_ROUNDS = 10; // 定義鹽的輪數，數值越高越安全但耗時�
  * @param password 要雜湊的原始密碼
  * @returns 雜湊後的密碼字串
  */
-export async function hashPassword(password: string): Promise<string> {
+export async function HashPasswordAsync(password: string): Promise<string> {
   try {
     const salt = await bcrypt.genSalt(SALT_ROUNDS);
     const hash = await bcrypt.hash(password, salt);
@@ -24,7 +24,7 @@ export async function hashPassword(password: string): Promise<string> {
  * @param hashedPassword 儲存在資料庫中的雜湊密碼
  * @returns 如果密碼匹配則返回 true，否則返回 false
  */
-export async function comparePassword(
+export async function ComparePasswordAsync(
   password: string,
   hashedPassword: string
 ): Promise<boolean> {

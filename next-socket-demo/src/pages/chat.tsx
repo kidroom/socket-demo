@@ -1,72 +1,54 @@
-"use client";
+// pages/index.tsx
+import ChatList from "../components/chat_list";
+import ChatMessages from "../components/chat_message";
+import "../styles/chat.css";
+import { useState } from "react";
 
-import { useState, useEffect } from "react";
-import socket from "../lib/socket";
-import { ChatMessageModel } from "../models/socket_model";
+interface Message {
+  sender: "me" | "other" | string;
+  text: string;
+}
 
-export default function Home() {
-  const [messages, setMessages] = useState<ChatMessageModel[]>([]);
-  const [input, setInput] = useState<string>("");
-  const userId = "user_123"; // 假設登入使用者
+interface Chat {
+  id: string;
+  name: string;
+  messages?: Message[];
+}
 
-  useEffect(() => {
-    socket.connect();
+const DUMMY_CHATS: Chat[] = [
+  {
+    id: "1",
+    name: "小明",
+    messages: [
+      { sender: "me", text: "你好嗎？" },
+      { sender: "other", text: "我很好，謝謝！" },
+    ],
+  },
+  {
+    id: "2",
+    name: "群組聊天",
+    messages: [
+      { sender: "A", text: "大家早安！" },
+      { sender: "B", text: "早安！" },
+    ],
+  },
+  { id: "3", name: "技術交流", messages: [] },
+];
 
-    socket.emit("login", userId);
+const IndexPage: React.FC = () => {
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
 
-    socket.on("receive_message", (msg) => {
-      setMessages((prev) => [
-        ...prev,
-        { sender: "user_456", receive: userId, content: msg },
-      ]);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  const sendMessage = () => {
-    socket.emit("send_message", {
-      sender: userId,
-      receive: "user_456",
-      content: input,
-    });
-    setMessages((prev) => [
-      ...prev,
-      { sender: "我", receive: "user_456", content: input },
-    ]);
-    setInput("");
+  const handleSelectChat = (chatId: string) => {
+    const chat = DUMMY_CHATS.find((c) => c.id === chatId);
+    setSelectedChat(chat || null);
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>聊天室</h2>
-      <div
-        style={{
-          border: "1px solid #ccc",
-          height: 300,
-          overflowY: "scroll",
-          marginBottom: 10,
-          padding: 10,
-        }}
-      >
-        {messages.map((msg, idx) => (
-          <div key={idx}>
-            <strong>{msg.sender}:</strong> {msg.content}
-          </div>
-        ))}
-      </div>
-      <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-        placeholder="輸入訊息"
-        style={{ width: "80%" }}
-      />
-      <button onClick={sendMessage} style={{ marginLeft: 10 }}>
-        發送
-      </button>
+    <div className="container">
+      <ChatList chats={DUMMY_CHATS} onSelectChat={handleSelectChat} />
+      <ChatMessages chat={selectedChat} />
     </div>
   );
-}
+};
+
+export default IndexPage;

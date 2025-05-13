@@ -1,0 +1,6 @@
+/* pages/index.module.css */
+.container {
+    display: flex;
+    height: 100vh;
+    /* 佔滿視窗高度 */
+}

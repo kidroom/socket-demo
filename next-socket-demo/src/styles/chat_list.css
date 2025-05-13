@@ -1,0 +1,37 @@
+/* components/ChatList.module.css */
+.chatList {
+    width: 250px;
+    border-right: 1px solid #ccc;
+    padding: 20px;
+    height: 100vh;
+    /* 佔滿視窗高度 */
+    overflow-y: auto;
+}
+
+.chatList h2 {
+    margin-bottom: 15px;
+}
+
+.chatList ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chatList li {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.chatList li:last-child {
+    border-bottom: none;
+}
+
+.chatList li:hover {
+    background-color: #f0f0f0;
+}
+
+.active {
+    background-color: #e0e0e0;
+}

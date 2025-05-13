@@ -1,10 +1,9 @@
-import { hashPassword, comparePassword } from "../libs/crypt_helper";
+import { HashPasswordAsync, ComparePasswordAsync } from "../libs/crypt_helper";
 import { User } from "../models/user";
 import user_repository from "../repositories/user_repository";
 
 class UserService {
-  /**
-   * 新增使用者帳號
+  /** 新增使用者帳號
    * @param account
    * @param password
    * @param name
@@ -18,7 +17,7 @@ class UserService {
     email: string | null = null,
     phone: string | null = null
   ) {
-    let hashedPassword = await hashPassword(password);
+    let hashedPassword = await HashPasswordAsync(password);
     user_repository.CreateUserAsync(
       account,
       hashedPassword,
@@ -28,8 +27,7 @@ class UserService {
     );
   }
 
-  /**
-   * 確認使用者是否存在
+  /** 確認使用者是否存在
    * @param account
    * @returns
    */
@@ -42,8 +40,7 @@ class UserService {
     }
   }
 
-  /**
-   * 取得使用者
+  /** 取得使用者
    * @param account
    * @returns
    */
@@ -51,15 +48,30 @@ class UserService {
     return await user_repository.QueryExistUserByAccountAsync(account);
   }
 
-  /**
-   * 驗證登入
+  /** 驗證密碼
    * @param user
    * @param password
    * @returns
    */
   async LoginAsync(user: User | null, password: string): Promise<Boolean> {
     if (user) {
-      return await comparePassword(password, user.password);
+      return await ComparePasswordAsync(password, user.password);
+    }
+
+    return false;
+  }
+
+  /** 重設密碼
+   * @param user
+   * @returns
+   */
+  async ResetPassword(user: User): Promise<Boolean> {
+    let default_password = await HashPasswordAsync("123456");
+    user.password = default_password;
+    user.updatedAt = new Date();
+    let result = await user_repository.UpdateUserAsync(user);
+    if (result[0] >= 1) {
+      return true;
     }
 
     return false;

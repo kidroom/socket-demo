@@ -1,0 +1,64 @@
+/* components/ChatMessages.module.css */
+.chatMessages {
+    flex-grow: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    /* 佔滿視窗高度 */
+}
+
+.chatMessages h2 {
+    margin-bottom: 15px;
+}
+
+.messageContainer {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-bottom: 15px;
+}
+
+.sent {
+    background-color: #dcf8c6;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    align-self: flex-end;
+    word-break: break-word;
+}
+
+.received {
+    background-color: #f0f0f0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    align-self: flex-start;
+    word-break: break-word;
+}
+
+.inputForm {
+    display: flex;
+    margin-top: auto;
+    /* 將輸入框固定在底部 */
+}
+
+.inputForm input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px 0 0 5px;
+    outline: none;
+}
+
+.inputForm button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+}
+
+.inputForm button:hover {
+    background-color: #0056b3;
+}

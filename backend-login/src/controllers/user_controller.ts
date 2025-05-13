@@ -6,8 +6,7 @@ import { UserStatus } from "../libs/db_enum";
 const secretKey = "your-secret-key"; // 應使用 .env 儲存金鑰
 
 class UserController {
-  /**
-   * 使用者註冊
+  /** 使用者註冊
    * @param password
    * @returns 雜湊後的密碼字串
    */
@@ -30,6 +29,11 @@ class UserController {
     res.status(201).json({ message: "註冊成功" });
   }
 
+  /** 登入
+   * @param req
+   * @param res
+   * @returns
+   */
   public async Login(req: Request, res: Response): Promise<void> {
     const { account, password } = req.body;
 
@@ -49,6 +53,29 @@ class UserController {
       expiresIn: "1h",
     });
     res.json({ token });
+  }
+
+  /** 重設密碼
+   * @param req
+   * @param res
+   * @returns
+   */
+  public async ResetPassword(req: Request, res: Response): Promise<void> {
+    const { account, password } = req.body;
+
+    let user = await userService.GetExistUserByAccountAsync(account);
+    if (!user) {
+      res.status(401).json({ message: "使用者名稱或密碼錯誤" });
+      return;
+    }
+
+    let success = await userService.ResetPassword(user);
+    if (!success) {
+      res.status(500).json({ message: "密碼重設失敗" });
+      return;
+    }
+
+    res.json({ message: "修改完成" });
   }
 
   public protectedRoute(req: Request, res: Response): void {

@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import "../styles/register.css";
 
 const RegisterPage = () => {
-  const [username, setUsername] = useState("");
+  const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -14,10 +14,13 @@ const RegisterPage = () => {
     setMessage("");
 
     try {
-      const response = await axios.post("http://localhost:5000/api/register", {
-        username,
-        password,
-      });
+      const response = await axios.post(
+        "http://localhost:5010/api/user/register",
+        {
+          account,
+          password,
+        }
+      );
       setMessage(response.data.message);
       if (response.status === 201) {
         router.push("/login");
@@ -46,12 +49,12 @@ const RegisterPage = () => {
         )}
         <form className="register-form" onSubmit={handleRegister}>
           <div className="input-group">
-            <label htmlFor="username">User Name:</label>
+            <label htmlFor="account">User Name:</label>
             <input
               type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="account"
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
               required
             />
           </div>

@@ -4,7 +4,11 @@ import { User } from "../models/user";
 import { UserStatus } from "../libs/db_enum";
 
 class UserRepository {
-  async QueryUser(id: number): Promise<User | null> {
+  /** 查詢使用者
+   * @param id
+   * @returns
+   */
+  async QueryUserAsync(id: number): Promise<User | null> {
     try {
       await db.sequelize.authenticate();
       console.log("資料庫連線成功！");
@@ -20,8 +24,7 @@ class UserRepository {
     }
   }
 
-  /**
-   * 查詢使用者是否存在
+  /** 查詢活躍使用者
    * @param account
    * @returns
    */
@@ -55,6 +58,14 @@ class UserRepository {
     }
   }
 
+  /** 建立使用者
+   * @param account
+   * @param password
+   * @param name
+   * @param email
+   * @param phone
+   * @returns
+   */
   async CreateUserAsync(
     account: string,
     password: string,
@@ -84,7 +95,11 @@ class UserRepository {
     }
   }
 
-  async UpdateUsers(user: User): Promise<[number, User[]]> {
+  /** 更新玩家資料
+   * @param user
+   * @returns
+   */
+  async UpdateUserAsync(user: User): Promise<[number, User[]]> {
     try {
       await db.sequelize.authenticate();
       console.log("資料庫連線成功！");
@@ -106,7 +121,11 @@ class UserRepository {
     }
   }
 
-  async DeleteUsers(user: User): Promise<number> {
+  /** 刪除使用者
+   * @param user
+   * @returns
+   */
+  async DeleteUsersAsync(user: User): Promise<number> {
     try {
       await db.sequelize.authenticate();
       console.log("資料庫連線成功！");

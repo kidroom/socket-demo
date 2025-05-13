@@ -1,30 +1,35 @@
 import { useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import "../styles/login.css";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login with:", username, password);
+    console.log("Login with:", account, password);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/login", {
-        username,
-        password,
-      });
+      const response = await axios.post(
+        "http://localhost:5010/api/user/login",
+        {
+          account,
+          password,
+        }
+      );
       const { token } = response.data;
       // 將 token 儲存到 localStorage 或 cookie 中
       localStorage.setItem("authToken", token);
-      router.push("/protected");
+      router.push("/chat");
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof AxiosError) {
+        setMessage(error.response?.data || "登入失敗");
+      } else if (error instanceof Error) {
         setMessage(error.message || "登入失敗");
       } else {
         setMessage("Unknown error");
@@ -47,12 +52,12 @@ export default function LoginPage() {
         )}
         <form className="login-form" onSubmit={handleLogin}>
           <div className="input-group">
-            <label htmlFor="username">User Name:</label>
+            <label htmlFor="account">User Name:</label>
             <input
               type="text"
-              placeholder="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="account"
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
               required
             />
           </div>
