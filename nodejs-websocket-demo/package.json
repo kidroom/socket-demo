@@ -1,5 +1,5 @@
 {
-  "name": "nodejs-websocket-server",
+  "name": "nodejs-websocket-demo",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {

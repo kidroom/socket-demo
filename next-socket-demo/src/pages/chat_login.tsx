@@ -28,7 +28,7 @@ export default function LoginPage() {
       router.push("/chat");
     } catch (error) {
       if (error instanceof AxiosError) {
-        setMessage(error.response?.data || "登入失敗");
+        setMessage(error.response?.data.message || "登入失敗");
       } else if (error instanceof Error) {
         setMessage(error.message || "登入失敗");
       } else {
