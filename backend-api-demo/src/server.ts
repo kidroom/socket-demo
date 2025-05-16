@@ -1,7 +1,8 @@
 import app from "./app";
 import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
+const config = dotenv.config({ path: "./backend-api-demo/.env" });
 const port = parseInt(process.env.PORT || "5000", 10);
 
 app.listen(port, () => {

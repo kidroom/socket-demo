@@ -1,7 +1,9 @@
 import { Sequelize, Op } from "sequelize";
 const db = require("../libs/database"); // 注意：CommonJS 的引用方式
-import { User } from "../models/user";
+import { User } from "../../database/models/user";
+import { AuthToken } from "../../database/models/auth_token";
 import { UserStatus } from "../libs/db_enum";
+import { TokenExpiredError } from "jsonwebtoken";
 
 class UserRepository {
   /** 查詢使用者
@@ -134,6 +136,86 @@ class UserRepository {
       });
       console.log("使用者已刪除:", deletedRowCount > 0);
       return deletedRowCount;
+    } catch (error) {
+      console.error("無法連線到資料庫:", error);
+      throw error;
+    } finally {
+      // 可選：在應用程式結束時關閉連線
+      // await db.sequelize.close();
+    }
+  }
+
+  async GetTokenAsync(
+    id: string,
+    token: string,
+    device: string
+  ): Promise<AuthToken[] | null> {
+    try {
+      await db.sequelize.authenticate();
+      console.log("資料庫連線成功！");
+
+      const now = new Date();
+      const model = await AuthToken.findAll({
+        where: {
+          [Op.and]: [
+            {
+              user_id: {
+                [Op.eq]: id,
+              },
+            },
+            {
+              token: {
+                [Op.eq]: token,
+              },
+            },
+            {
+              device: {
+                [Op.eq]: device,
+              },
+            },
+            {
+              expired_date: {
+                [Op.lt]: now,
+              },
+            },
+          ],
+        },
+      });
+      console.log("紀錄token:", JSON.stringify(model, null, 2));
+      return model;
+    } catch (error) {
+      console.error("無法連線到資料庫:", error);
+      throw error;
+    } finally {
+      // 可選：在應用程式結束時關閉連線
+      // await db.sequelize.close();
+    }
+  }
+
+  /** 紀錄 token
+   * @param id
+   * @param token
+   * @param device
+   * @param expired_date
+   * @returns
+   */
+  async SetTokenAsync(
+    id: string,
+    token: string,
+    device: string,
+    expired_date: Date
+  ): Promise<AuthToken | null> {
+    try {
+      await db.sequelize.authenticate();
+      console.log("資料庫連線成功！");
+      const model = await AuthToken.create({
+        user_id: id,
+        token: token,
+        device: device,
+        expired_date: expired_date,
+      });
+      console.log("紀錄token:", model.toJSON());
+      return model;
     } catch (error) {
       console.error("無法連線到資料庫:", error);
       throw error;

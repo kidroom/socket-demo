@@ -9,5 +9,4 @@ router.post("/login", userController.Login);
 router.post("/reset_password", userController.ResetPassword);
 //router.get("/protected", authenticateToken, userController.protectedRoute);
 // 可以添加其他的路由 (POST, PUT, DELETE 等)
-router.post("/api", userController.api);
 export default router;

@@ -1,6 +1,15 @@
 // src/libs/database.ts
 import { Sequelize, Dialect } from "sequelize";
-const { initUserModel, User } = require("../models/user");
+import {
+  initAuthTokenModel,
+  AuthToken,
+} from "../../database/models/auth_token";
+import { initChatRoomModel, ChatRoom } from "../../database/models/chat_room";
+import {
+  initChatRoomRecordModel,
+  ChatRoomRecord,
+} from "../../database/models/chat_room_record";
+import { initUserModel, User } from "../../database/models/user";
 import dotenv from "dotenv";
 
 dotenv.config({ path: "./backend-login/.env" });
@@ -18,6 +27,9 @@ const sequelize = new Sequelize(
 
 const db = {
   sequelize,
+  AuthToken: initAuthTokenModel(sequelize),
+  ChatRoom: initChatRoomModel(sequelize),
+  ChatRoomRecord: initChatRoomRecordModel(sequelize),
   User: initUserModel(sequelize),
 };
 

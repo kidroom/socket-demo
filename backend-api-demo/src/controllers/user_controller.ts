@@ -3,7 +3,8 @@ import jwt from "jsonwebtoken";
 import userService from "../services/user_service";
 import { UserStatus } from "../libs/db_enum";
 
-const secretKey = "your-secret-key"; // 應使用 .env 儲存金鑰
+const secretKey =
+  "18bfaf64981d6ff162af44be0ae4086451b57b6f065343c862669963ae99aefd"; // 應使用 .env 儲存金鑰
 
 class UserController {
   /** 使用者註冊
@@ -14,13 +15,13 @@ class UserController {
     const { account, password } = req.body;
 
     if (!account || !password) {
-      res.status(400).json({ message: "請提供使用者名稱和密碼" });
+      res.status(401).json({ message: "請提供使用者名稱和密碼" });
       return;
     }
 
     const exists = await userService.CheckUserExistAsync(account);
     if (exists) {
-      res.status(409).json({ message: "使用者名稱已存在" });
+      res.status(401).json({ message: "使用者名稱已存在" });
       return;
     }
 
@@ -35,6 +36,12 @@ class UserController {
    * @returns
    */
   public async Login(req: Request, res: Response): Promise<void> {
+    const cookies = req.cookies;
+    const user_agent = req.headers["user-agent"];
+    if (await userService.CheckTokenAsync(cookies["token"], user_agent)) {
+      res.json({ message: cookies["token"] });
+      return;
+    }
     const { account, password } = req.body;
 
     let user = await userService.GetExistUserByAccountAsync(account);
@@ -52,7 +59,10 @@ class UserController {
     const token = jwt.sign({ username: user.id }, secretKey, {
       expiresIn: "1h",
     });
-    res.json({ token });
+
+    await userService.SetTokenAsync(user.id, token, "");
+
+    res.json({ message: token });
   }
 
   /** 重設密碼
@@ -81,12 +91,6 @@ class UserController {
   public protectedRoute(req: Request, res: Response): void {
     res.json({
       message: `歡迎，${(req as any).user.username}！這是受保護的內容。`,
-    });
-  }
-
-  public api(req: Request, res: Response): void {
-    res.json({
-      message: `${UserStatus.Activity}`,
     });
   }
 }
