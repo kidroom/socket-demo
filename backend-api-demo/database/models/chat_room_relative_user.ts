@@ -12,53 +12,49 @@ import { User } from "../models/user";
 import { ChatRoom } from "../models/chat_room";
 
 // 1. 定義屬性型別
-interface ChatRoomRecordAttributes {
+interface ChatRoomRelativeUserAttributes {
   id: number;
   room_id: string;
   user_id: string;
-  sort: number;
-  message: string;
   status: number;
   createdAt: Date;
   updatedAt?: Date | null;
   deletedAt?: Date | null;
 }
-interface ChatRoomRecordCreationAttributes
-  extends Optional<ChatRoomRecordAttributes, "id" | "createdAt"> {}
+interface ChatRoomRelativeUserCreationAttributes
+  extends Optional<ChatRoomRelativeUserAttributes, "id" | "createdAt"> {}
 
 // 2. 建立 Sequelize model class
-export class ChatRoomRecord
+export class ChatRoomRelativeUser
   extends Model<
-    InferAttributes<ChatRoomRecord>,
-    ChatRoomRecordCreationAttributes
+    InferAttributes<ChatRoomRelativeUser>,
+    ChatRoomRelativeUserCreationAttributes
   >
-  implements ChatRoomRecordAttributes
+  implements ChatRoomRelativeUserAttributes
 {
   declare id: number;
   declare room_id: string;
   declare user_id: string;
-  declare sort: number;
-  declare message: string;
   declare status: number;
   declare createdAt: Date;
   declare updatedAt?: Date | null;
   declare deletedAt?: Date | null;
 
   static associate(models: { User: typeof User; ChatRoom: typeof ChatRoom }) {
-    ChatRoomRecord.belongsTo(models.User, {
+    ChatRoomRelativeUser.belongsTo(models.User, {
       foreignKey: "user_id",
     });
-    ChatRoomRecord.belongsTo(models.ChatRoom, {
+    ChatRoomRelativeUser.belongsTo(models.ChatRoom, {
       foreignKey: "room_id",
     });
   }
 }
 
 // 3. 初始化 model
-export function initChatRoomRecordModel(
+export function initChatRoomRelativeUserModel(
   sequelize: Sequelize
-): typeof ChatRoomRecord {
-  ChatRoomRecord.init(
+): typeof ChatRoomRelativeUser {
+  ChatRoomRelativeUser.init(
     {
       id: {
         type: DataTypes.INTEGER,
@@ -72,14 +68,6 @@ export function initChatRoomRecordModel(
       },
       user_id: {
         type: DataTypes.UUID,
-        allowNull: false,
-      },
-      sort: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      message: {
-        type: DataTypes.STRING,
         allowNull: false,
       },
       status: {
@@ -96,18 +84,14 @@ export function initChatRoomRecordModel(
         type: DataTypes.DATE,
         allowNull: true,
       },
-      deletedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
     },
     {
       sequelize,
-      modelName: "chat_room_record",
+      modelName: "chat_room_relative_user",
       freezeTableName: true,
       timestamps: false, // 你有自定義 createdAt/updatedAt，因此關掉 Sequelize 自動的 createdAt/updatedAt
     }
   );
 
-  return ChatRoomRecord;
+  return ChatRoomRelativeUser;
 }

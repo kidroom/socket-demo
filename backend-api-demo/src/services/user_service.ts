@@ -1,29 +1,9 @@
 import { HashPasswordAsync, ComparePasswordAsync } from "../libs/crypt_helper";
+import { GetDevice } from "../libs/http_helper";
+import { TryParseJwt, SignJwt } from "../libs/jwt_helper";
 import { User } from "../../database/models/user";
 import { AuthToken } from "../../database/models/auth_token";
 import user_repository from "../repositories/user_repository";
-import jwt from "jsonwebtoken";
-import UAParser from "ua-parser-js";
-
-interface VerifiedTokenPayload {
-  userId: number;
-  username: string;
-  device: string;
-  iat: number; // issued at
-  exp: number; // expiration time
-  [key: string]: any; // 允許其他屬性
-}
-
-class Device {
-  declare browser: string;
-  declare os: string;
-  declare deviceType: string;
-  declare vendor: string;
-  declare model: string;
-}
-
-const secretKey =
-  "18bfaf64981d6ff162af44be0ae4086451b57b6f065343c862669963ae99aefd"; // 應使用 .env 儲存金鑰
 
 class UserService {
   /** 新增使用者帳號
@@ -109,11 +89,9 @@ class UserService {
     id: string,
     user_agent: string | undefined
   ): Promise<string | null> {
-    const device = await this.GetDevice(user_agent);
+    const device = await GetDevice(user_agent);
 
-    const token = jwt.sign({ username: id, device: device.vendor }, secretKey, {
-      expiresIn: "1h",
-    });
+    const token = SignJwt({ username: id, device: device.vendor });
 
     const now = new Date();
     const expired_date = new Date(now.getTime() + 60 * 60 * 1000);
@@ -142,17 +120,8 @@ class UserService {
    */
   async CheckTokenAsync(token: any): Promise<Boolean> {
     if (token) {
-      let verifiedPayload: VerifiedTokenPayload;
-      try {
-        verifiedPayload = jwt.verify(token, secretKey) as VerifiedTokenPayload;
-      } catch (error: any) {
-        if (error instanceof jwt.TokenExpiredError) {
-          console.error("錯誤類型: Token 已過期！");
-        } else if (error instanceof jwt.JsonWebTokenError) {
-          console.error("錯誤類型: 無效的 Token 或簽名！");
-        } else {
-          console.error("其他 JWT 錯誤:", error);
-        }
+      const verifiedPayload = TryParseJwt(token);
+      if (!verifiedPayload) {
         return false;
       }
 
@@ -179,20 +148,6 @@ class UserService {
     }
 
     return false;
-  }
-
-  async GetDevice(user_agent: string | undefined): Promise<Device> {
-    let device = new Device();
-
-    const parser = (UAParser as any)(user_agent);
-
-    device.browser = parser.browser.name || "";
-    device.os = parser.os.name || "";
-    device.deviceType = parser.device.type || "desktop"; // 如果沒有特別指定，默認為 desktop
-    device.vendor = parser.device.vendor || "";
-    device.model = parser.device.model || "";
-
-    return device;
   }
 }
 

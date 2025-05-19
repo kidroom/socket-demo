@@ -12,7 +12,7 @@ import {
 // 1. 定義屬性型別
 interface ChatRoomAttributes {
   id: number;
-  user_id: string;
+  room_name: string;
   status: number;
   createdAt: Date;
   updatedAt?: Date | null;
@@ -27,7 +27,7 @@ export class ChatRoom
   implements ChatRoomAttributes
 {
   declare id: number;
-  declare user_id: string;
+  declare room_name: string;
   declare status: number;
   declare createdAt: Date;
   declare updatedAt?: Date | null;
@@ -43,12 +43,11 @@ export function initChatRoomModel(sequelize: Sequelize): typeof ChatRoom {
   ChatRoom.init(
     {
       id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
         allowNull: false,
         primaryKey: true,
       },
-      user_id: {
+      room_name: {
         type: DataTypes.UUID,
         allowNull: false,
       },

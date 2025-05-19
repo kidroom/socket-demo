@@ -43,6 +43,33 @@ const IndexPage: React.FC = () => {
     setSelectedChat(chat || null);
   };
 
+  const getRoomList = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Login with:", account, password);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5010/api/user/login",
+        {
+          account,
+          password,
+        }
+      );
+      const { token } = response.data;
+      // 將 token 儲存到 localStorage 或 cookie 中
+      localStorage.setItem("authToken", token);
+      router.push("/chat");
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        setMessage(error.response?.data.message || "登入失敗");
+      } else if (error instanceof Error) {
+        setMessage(error.message || "登入失敗");
+      } else {
+        setMessage("Unknown error");
+      }
+    }
+  };
+
   return (
     <div className="container">
       <ChatList chats={DUMMY_CHATS} onSelectChat={handleSelectChat} />

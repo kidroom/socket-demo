@@ -2,12 +2,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('auth_token', {
+    await queryInterface.createTable('chat_room_relative_users', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
+      },
+      room_id: {
+        allowNull: false,
+        type: Sequelize.UUID,
+        references: {
+          model: 'chat_room',
+          key: 'id',
+        },
       },
       user_id: {
         allowNull: false,
@@ -17,26 +25,22 @@ module.exports = {
           key: 'id',
         },
       },
-      token: {
+      status: {
         allowNull: false,
-        type: Sequelize.STRING
-      },
-      device: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      expired_date: {
-        allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE
       }
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('auth_token');
+    await queryInterface.dropTable('chat_room_relative_users');
   }
 };

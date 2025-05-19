@@ -1,15 +1,11 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import userService from "../services/user_service";
-import { UserStatus } from "../libs/db_enum";
-
-const secretKey =
-  "18bfaf64981d6ff162af44be0ae4086451b57b6f065343c862669963ae99aefd"; // 應使用 .env 儲存金鑰
 
 class UserController {
   /** 使用者註冊
-   * @param password
-   * @returns 雜湊後的密碼字串
+   * @param req
+   * @param res
+   * @returns
    */
   public async Register(req: Request, res: Response): Promise<void> {
     const { account, password } = req.body;
@@ -57,6 +53,11 @@ class UserController {
     }
 
     const token = await userService.SetTokenAsync(user.id, user_agent);
+
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 1 * 360000),
+      httpOnly: true,
+    });
 
     res.json({ message: token });
   }

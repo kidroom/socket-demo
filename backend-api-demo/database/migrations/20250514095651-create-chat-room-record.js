@@ -11,11 +11,19 @@ module.exports = {
       },
       room_id: {
         allowNull: false,
-        type: Sequelize.UUID
+        type: Sequelize.UUID,
+        references: {
+          model: 'chat_room',
+          key: 'id',
+        },
       },
       user_id: {
         allowNull: false,
-        type: Sequelize.UUID
+        type: Sequelize.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
       },
       sort: {
         allowNull: false,

@@ -5,13 +5,12 @@ module.exports = {
     await queryInterface.createTable('chat_room', {
       id: {
         allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      user_id: {
-        allowNull: false,
         type: Sequelize.UUID
+      },
+      room_name: {
+        allowNull: false,
+        type: Sequelize.STRING
       },
       status: {
         allowNull: false,

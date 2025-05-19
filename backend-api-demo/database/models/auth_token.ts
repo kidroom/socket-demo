@@ -8,6 +8,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
 } from "sequelize";
+import { User } from "../models/user";
 
 // 1. 定義屬性型別
 interface AuthTokenAttributes {
@@ -33,9 +34,11 @@ export class AuthToken
   declare expired_date: Date;
   declare createdAt: Date;
 
-  // static associate(models: any) {
-  //   // 定義關聯
-  // }
+  static associate(models: { User: typeof User }) {
+    AuthToken.belongsTo(models.User, {
+      foreignKey: "user_id",
+    });
+  }
 }
 
 // 3. 初始化 model
