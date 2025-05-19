@@ -175,7 +175,7 @@ class UserRepository {
             },
             {
               expired_date: {
-                [Op.lt]: now,
+                [Op.gt]: now,
               },
             },
           ],

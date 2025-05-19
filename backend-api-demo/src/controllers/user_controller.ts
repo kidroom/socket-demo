@@ -38,7 +38,7 @@ class UserController {
   public async Login(req: Request, res: Response): Promise<void> {
     const cookies = req.cookies;
     const user_agent = req.headers["user-agent"];
-    if (await userService.CheckTokenAsync(cookies["token"], user_agent)) {
+    if (await userService.CheckTokenAsync(cookies["token"])) {
       res.json({ message: cookies["token"] });
       return;
     }
@@ -56,11 +56,7 @@ class UserController {
       return;
     }
 
-    const token = jwt.sign({ username: user.id }, secretKey, {
-      expiresIn: "1h",
-    });
-
-    await userService.SetTokenAsync(user.id, token, "");
+    const token = await userService.SetTokenAsync(user.id, user_agent);
 
     res.json({ message: token });
   }

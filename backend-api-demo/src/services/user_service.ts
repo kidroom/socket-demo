@@ -105,10 +105,21 @@ class UserService {
    * @param token
    * @param device
    */
-  async SetTokenAsync(id: string, token: string, device: string) {
+  async SetTokenAsync(
+    id: string,
+    user_agent: string | undefined
+  ): Promise<string | null> {
+    const device = await this.GetDevice(user_agent);
+
+    const token = jwt.sign({ username: id, device: device.vendor }, secretKey, {
+      expiresIn: "1h",
+    });
+
     const now = new Date();
     const expired_date = new Date(now.getTime() + 60 * 60 * 1000);
-    await user_repository.SetTokenAsync(id, token, device, expired_date);
+    await user_repository.SetTokenAsync(id, token, device.vendor, expired_date);
+
+    return token;
   }
 
   /** 取得 token
@@ -129,10 +140,7 @@ class UserService {
    * @param token
    * @returns
    */
-  async CheckTokenAsync(
-    token: any,
-    user_agent: string | undefined
-  ): Promise<Boolean> {
+  async CheckTokenAsync(token: any): Promise<Boolean> {
     if (token) {
       let verifiedPayload: VerifiedTokenPayload;
       try {
@@ -160,12 +168,12 @@ class UserService {
 
       let exist_token = tokens?.filter(
         (x) =>
-          x.id == verifiedPayload.userId &&
+          x.user_id == verifiedPayload.username &&
           x.device == verifiedPayload.device &&
           x.token == token
       );
 
-      if (exist_token) {
+      if (exist_token && exist_token?.length > 0) {
         return true;
       }
     }
@@ -173,16 +181,18 @@ class UserService {
     return false;
   }
 
-  async GetDevice(user_agent: string | undefined) {
+  async GetDevice(user_agent: string | undefined): Promise<Device> {
     let device = new Device();
 
     const parser = (UAParser as any)(user_agent);
 
-    device.browser = parser.browser.name || "未知";
-    device.os = parser.os.name || "未知";
+    device.browser = parser.browser.name || "";
+    device.os = parser.os.name || "";
     device.deviceType = parser.device.type || "desktop"; // 如果沒有特別指定，默認為 desktop
-    device.vendor = parser.device.vendor || "未知";
-    device.model = parser.device.model || "未知";
+    device.vendor = parser.device.vendor || "";
+    device.model = parser.device.model || "";
+
+    return device;
   }
 }
 
