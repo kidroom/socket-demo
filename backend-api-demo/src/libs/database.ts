@@ -2,14 +2,21 @@
 import { Sequelize, Dialect } from "sequelize";
 import {
   initAuthTokenModel,
-  AuthToken,
+  associateAuthTokenModel,
 } from "../../database/models/auth_token";
-import { initChatRoomModel, ChatRoom } from "../../database/models/chat_room";
+import {
+  initChatRoomModel,
+  associateChatRoomModel,
+} from "../../database/models/chat_room";
 import {
   initChatRoomRecordModel,
-  ChatRoomRecord,
+  associateChatRoomRecordModel,
 } from "../../database/models/chat_room_record";
-import { initUserModel, User } from "../../database/models/user";
+import {
+  initChatRoomRelativeUserModel,
+  associateChatRoomRelativeUserModel,
+} from "../../database/models/chat_room_relative_user";
+import { initUserModel, associateUserModel } from "../../database/models/user";
 import dotenv from "dotenv";
 
 dotenv.config({ path: "./backend-login/.env" });
@@ -30,7 +37,26 @@ const db = {
   AuthToken: initAuthTokenModel(sequelize),
   ChatRoom: initChatRoomModel(sequelize),
   ChatRoomRecord: initChatRoomRecordModel(sequelize),
+  ChatRoomRelativeUser: initChatRoomRelativeUserModel(sequelize),
   User: initUserModel(sequelize),
 };
 
+associateAuthTokenModel({ User: db.User });
+associateChatRoomModel({
+  ChatRoomRelativeUser: db.ChatRoomRelativeUser,
+  ChatRoomRecord: db.ChatRoomRecord,
+});
+associateChatRoomRecordModel({
+  ChatRoom: db.ChatRoom,
+  User: db.User,
+});
+associateChatRoomRelativeUserModel({
+  ChatRoom: db.ChatRoom,
+  User: db.User,
+});
+associateUserModel({
+  AuthToken: db.AuthToken,
+  ChatRoomRecord: db.ChatRoomRecord,
+  ChatRoomRelativeUser: db.ChatRoomRelativeUser,
+});
 module.exports = db;

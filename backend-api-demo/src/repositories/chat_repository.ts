@@ -1,20 +1,59 @@
 import { Op } from "sequelize";
 const db = require("../libs/database"); // 注意：CommonJS 的引用方式
+import { ChatRoom } from "../../database/models/chat_room";
+import { ChatRoomRecord } from "../../database/models/chat_room_record";
 import { ChatRoomRelativeUser } from "../../database/models/chat_room_relative_user";
-import { UserStatus } from "../libs/db_enum";
 
 class UserRepository {
   /** 查詢使用者
    * @param id
    * @returns
    */
-  async GetRoomList(id: number): Promise<User | null> {
+  async GetRoomList(user_id: string): Promise<ChatRoomRelativeUser[] | null> {
     try {
       await db.sequelize.authenticate();
       console.log("資料庫連線成功！");
-      const user = await ChatRoomRelativeUser.findByPk(id);
-      console.log("查詢使用者:", user ? user.toJSON() : "使用者不存在");
-      return user;
+      const rooms = await ChatRoomRelativeUser.findAll({
+        include: [
+          {
+            model: ChatRoom,
+            as: "chat_room",
+            attributes: ["room_name"],
+          },
+        ],
+        where: {
+          user_id: {
+            [Op.eq]: user_id,
+          },
+        },
+      });
+      return rooms;
+    } catch (error) {
+      console.error("無法連線到資料庫:", error);
+      return null;
+    } finally {
+      // 可選：在應用程式結束時關閉連線
+      // await db.sequelize.close();
+    }
+  }
+
+  /** 查詢聊天室內容
+   * @param room_id
+   * @returns
+   */
+  async GetChatContent(room_id: string): Promise<ChatRoomRecord[] | null> {
+    try {
+      await db.sequelize.authenticate();
+      console.log("資料庫連線成功！");
+      const rooms = await ChatRoomRecord.findAll({
+        where: {
+          room_id: {
+            [Op.eq]: room_id,
+          },
+        },
+        order: [["sort", "ASC"]],
+      });
+      return rooms;
     } catch (error) {
       console.error("無法連線到資料庫:", error);
       return null;

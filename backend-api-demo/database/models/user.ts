@@ -8,6 +8,9 @@ import {
   InferAttributes,
   InferCreationAttributes,
 } from "sequelize";
+import { AuthToken } from "./auth_token";
+import { ChatRoomRecord } from "./chat_room_record";
+import { ChatRoomRelativeUser } from "./chat_room_relative_user";
 
 // 1. 定義屬性型別
 interface UserAttributes {
@@ -40,10 +43,6 @@ export class User
   declare createdAt: Date;
   declare updatedAt?: Date | null;
   declare deletedAt?: Date | null;
-
-  // static associate(models: any) {
-  //   // 定義關聯
-  // }
 }
 
 // 3. 初始化 model
@@ -104,4 +103,23 @@ export function initUserModel(sequelize: Sequelize): typeof User {
   );
 
   return User;
+}
+
+export function associateUserModel(models: {
+  AuthToken: typeof AuthToken;
+  ChatRoomRecord: typeof ChatRoomRecord;
+  ChatRoomRelativeUser: typeof ChatRoomRelativeUser;
+}) {
+  User.hasMany(models.AuthToken, {
+    foreignKey: "user_id",
+    sourceKey: "id",
+  });
+  User.hasMany(models.ChatRoomRecord, {
+    foreignKey: "user_id",
+    sourceKey: "id",
+  });
+  User.hasMany(models.ChatRoomRelativeUser, {
+    foreignKey: "user_id",
+    sourceKey: "id",
+  });
 }

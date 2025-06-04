@@ -1,81 +1,45 @@
-import { GetDevice } from "../libs/http_helper";
-import { TryParseJwt, SignJwt } from "../libs/jwt_helper";
-import { AuthToken } from "../../database/models/auth_token";
-import user_repository from "../repositories/user_repository";
-import { UUID } from "crypto";
+import { TryParseJwt } from "../libs/jwt_helper";
+import chat_repository from "../repositories/chat_repository";
 
 class ChatService {
-  async GetRoomList(user_id: UUID) {
-    user_repository;
-  }
-  /** 紀錄 token
-   * @param id
-   * @param token
-   * @param device
-   */
-  async SetTokenAsync(
-    id: string,
-    user_agent: string | undefined
-  ): Promise<string | null> {
-    const device = await GetDevice(user_agent);
+  async GetRoomList(token: string): Promise<any[] | null> {
+    const verifiedPayload = TryParseJwt(token);
+    if (!verifiedPayload) {
+      return null;
+    }
+    const rooms = await chat_repository.GetRoomList(verifiedPayload.userId);
+    if (rooms && rooms.length <= 0) {
+      return null;
+    }
+    const result = rooms?.map((item) => ({
+      room_id: item.room_id,
+      room_name: item.chat_room?.room_name,
+    }));
 
-    const token = SignJwt({ username: id, device: device.vendor });
-
-    const now = new Date();
-    const expired_date = new Date(now.getTime() + 60 * 60 * 1000);
-    await user_repository.SetTokenAsync(id, token, device.vendor, expired_date);
-
-    return token;
+    return result ?? null;
   }
 
-  /** 取得 token
-   * @param id
-   * @param token
-   * @param device
-   * @returns
-   */
-  async GetTokenAsync(
-    id: string,
-    token: string,
-    device: string
-  ): Promise<AuthToken[] | null> {
-    return await user_repository.GetTokenAsync(id, token, device);
-  }
-
-  /** 檢查 token 是否合法
-   * @param token
-   * @returns
-   */
-  async CheckTokenAsync(token: string): Promise<Boolean> {
-    if (token) {
-      const verifiedPayload = TryParseJwt(token);
-      if (!verifiedPayload) {
-        return false;
-      }
-
-      let tokens = await user_repository.GetTokenAsync(
-        verifiedPayload.username,
-        token,
-        verifiedPayload.device
-      );
-
-      if (tokens && tokens?.length > 1) {
-        //TODO Warning
-      }
-
-      let exist_token = tokens?.filter(
-        (x) =>
-          x.user_id == verifiedPayload.username &&
-          x.device == verifiedPayload.device &&
-          x.token == token
-      );
-
-      if (exist_token && exist_token?.length > 0) {
-        return true;
-      }
+  async GetChatRoomRecord(token: string, room_id: string) {
+    const verifiedPayload = TryParseJwt(token);
+    if (!verifiedPayload) {
+      return null;
     }
 
-    return false;
+    const records = await chat_repository.GetChatContent(room_id);
+    if (records && records.length <= 0) {
+      return null;
+    }
+
+    const result = records?.map((item) => ({
+      room_id: item.room_id,
+      user_id: item.user_id,
+      sender: item.user_id == verifiedPayload.userId ? 1 : 2,
+      sort: item.sort,
+      message: item.message,
+      create_date: item.createdAt,
+    }));
+
+    return result ?? null;
   }
 }
 

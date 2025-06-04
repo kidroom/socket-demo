@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import userService from "../services/user_service";
+import user_service from "../services/user_service";
+import auth_service from "../services/auth_service";
 
 class UserController {
   /** 使用者註冊
@@ -15,13 +16,13 @@ class UserController {
       return;
     }
 
-    const exists = await userService.CheckUserExistAsync(account);
+    const exists = await user_service.CheckUserExistAsync(account);
     if (exists) {
       res.status(401).json({ message: "使用者名稱已存在" });
       return;
     }
 
-    await userService.UserRegisterAsync(account, password);
+    await user_service.UserRegisterAsync(account, password);
 
     res.status(201).json({ message: "註冊成功" });
   }
@@ -34,25 +35,25 @@ class UserController {
   public async Login(req: Request, res: Response): Promise<void> {
     const cookies = req.cookies;
     const user_agent = req.headers["user-agent"];
-    if (await userService.CheckTokenAsync(cookies["token"])) {
+    if (await auth_service.CheckTokenAsync(cookies["token"])) {
       res.json({ message: cookies["token"] });
       return;
     }
     const { account, password } = req.body;
 
-    let user = await userService.GetExistUserByAccountAsync(account);
+    let user = await user_service.GetExistUserByAccountAsync(account);
     if (!user) {
       res.status(401).json({ message: "使用者名稱或密碼錯誤" });
       return;
     }
 
-    let success = await userService.LoginAsync(user, password);
+    let success = await user_service.LoginAsync(user, password);
     if (!success) {
       res.status(401).json({ message: "使用者名稱或密碼錯誤" });
       return;
     }
 
-    const token = await userService.SetTokenAsync(user.id, user_agent);
+    const token = await auth_service.SetTokenAsync(user.id, user_agent);
 
     res.cookie("token", token, {
       expires: new Date(Date.now() + 1 * 360000),
@@ -70,13 +71,13 @@ class UserController {
   public async ResetPassword(req: Request, res: Response): Promise<void> {
     const { account, password } = req.body;
 
-    let user = await userService.GetExistUserByAccountAsync(account);
+    let user = await user_service.GetExistUserByAccountAsync(account);
     if (!user) {
       res.status(401).json({ message: "使用者名稱或密碼錯誤" });
       return;
     }
 
-    let success = await userService.ResetPassword(user);
+    let success = await user_service.ResetPassword(user);
     if (!success) {
       res.status(500).json({ message: "密碼重設失敗" });
       return;

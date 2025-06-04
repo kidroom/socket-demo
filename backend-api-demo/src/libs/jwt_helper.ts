@@ -5,7 +5,7 @@ const secretKey =
 const expireSize = "1h";
 
 interface VerifiedTokenPayload {
-  userId: number;
+  userId: string;
   username: string;
   device: string;
   iat: number; // issued at

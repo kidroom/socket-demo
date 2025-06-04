@@ -1,20 +1,16 @@
 // components/ChatMessages.tsx
 import "../styles/chat_message.css";
 import { useState, FormEvent } from "react";
+import { ChatRecord } from "../models/chat";
 
 interface Message {
   sender: "me" | "other" | string;
   text: string;
 }
 
-interface Chat {
-  id: string;
-  name: string;
-  messages?: Message[];
-}
-
 interface ChatMessagesProps {
-  chat: Chat | null;
+  chat_name: string | null;
+  chat: ChatRecord[] | null;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({ chat }) => {
@@ -35,14 +31,11 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ chat }) => {
 
   return (
     <div className="chatMessages">
-      <h2>{chat?.name}</h2>
+      <h2>{chat_name}</h2>
       <div className="messageContainer">
-        {chat.messages?.map((msg, index) => (
-          <div
-            key={index}
-            className={msg.sender === "me" ? "sent" : "received"}
-          >
-            {msg.text}
+        {chat?.map((msg, index) => (
+          <div key={index} className={msg.sender === 1 ? "sent" : "received"}>
+            {msg.message}
           </div>
         ))}
       </div>

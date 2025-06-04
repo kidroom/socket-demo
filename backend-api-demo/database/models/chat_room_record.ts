@@ -43,15 +43,6 @@ export class ChatRoomRecord
   declare createdAt: Date;
   declare updatedAt?: Date | null;
   declare deletedAt?: Date | null;
-
-  static associate(models: { User: typeof User; ChatRoom: typeof ChatRoom }) {
-    ChatRoomRecord.belongsTo(models.User, {
-      foreignKey: "user_id",
-    });
-    ChatRoomRecord.belongsTo(models.ChatRoom, {
-      foreignKey: "room_id",
-    });
-  }
 }
 
 // 3. 初始化 model
@@ -110,4 +101,18 @@ export function initChatRoomRecordModel(
   );
 
   return ChatRoomRecord;
+}
+
+export function associateChatRoomRecordModel(models: {
+  ChatRoom: typeof ChatRoom;
+  User: typeof User;
+}) {
+  ChatRoomRecord.belongsTo(models.ChatRoom, {
+    foreignKey: "room_id",
+    targetKey: "id",
+  });
+  ChatRoomRecord.belongsTo(models.User, {
+    foreignKey: "user_id",
+    targetKey: "id",
+  });
 }

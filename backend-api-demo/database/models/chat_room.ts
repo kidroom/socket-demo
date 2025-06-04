@@ -8,6 +8,8 @@ import {
   InferAttributes,
   InferCreationAttributes,
 } from "sequelize";
+import { ChatRoomRelativeUser } from "./chat_room_relative_user";
+import { ChatRoomRecord } from "./chat_room_record";
 
 // 1. 定義屬性型別
 interface ChatRoomAttributes {
@@ -32,10 +34,6 @@ export class ChatRoom
   declare createdAt: Date;
   declare updatedAt?: Date | null;
   declare deletedAt?: Date | null;
-
-  // static associate(models: any) {
-  //   // 定義關聯
-  // }
 }
 
 // 3. 初始化 model
@@ -79,4 +77,18 @@ export function initChatRoomModel(sequelize: Sequelize): typeof ChatRoom {
   );
 
   return ChatRoom;
+}
+
+export function associateChatRoomModel(models: {
+  ChatRoomRelativeUser: typeof ChatRoomRelativeUser;
+  ChatRoomRecord: typeof ChatRoomRecord;
+}) {
+  ChatRoom.hasMany(models.ChatRoomRecord, {
+    foreignKey: "room_id",
+    sourceKey: "id",
+  });
+  ChatRoom.hasMany(models.ChatRoomRelativeUser, {
+    foreignKey: "room_id",
+    sourceKey: "id",
+  });
 }

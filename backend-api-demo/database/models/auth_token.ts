@@ -3,12 +3,11 @@ import {
   DataTypes,
   Optional,
   Sequelize,
-  UUIDV4,
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
 } from "sequelize";
-import { User } from "../models/user";
+import { User } from "./user";
 
 // 1. 定義屬性型別
 interface AuthTokenAttributes {
@@ -33,12 +32,6 @@ export class AuthToken
   declare device: string;
   declare expired_date: Date;
   declare createdAt: Date;
-
-  static associate(models: { User: typeof User }) {
-    AuthToken.belongsTo(models.User, {
-      foreignKey: "user_id",
-    });
-  }
 }
 
 // 3. 初始化 model
@@ -82,4 +75,11 @@ export function initAuthTokenModel(sequelize: Sequelize): typeof AuthToken {
   );
 
   return AuthToken;
+}
+
+export function associateAuthTokenModel(models: { User: typeof User }) {
+  AuthToken.belongsTo(models.User, {
+    foreignKey: "user_id",
+    targetKey: "id",
+  });
 }

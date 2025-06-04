@@ -27,7 +27,7 @@ interface ChatRoomRelativeUserCreationAttributes
 // 2. 建立 Sequelize model class
 export class ChatRoomRelativeUser
   extends Model<
-    InferAttributes<ChatRoomRelativeUser>,
+    InferAttributes<ChatRoomRelativeUser, { omit: "chat_room" | "user" }>,
     ChatRoomRelativeUserCreationAttributes
   >
   implements ChatRoomRelativeUserAttributes
@@ -40,14 +40,9 @@ export class ChatRoomRelativeUser
   declare updatedAt?: Date | null;
   declare deletedAt?: Date | null;
 
-  static associate(models: { User: typeof User; ChatRoom: typeof ChatRoom }) {
-    ChatRoomRelativeUser.belongsTo(models.User, {
-      foreignKey: "user_id",
-    });
-    ChatRoomRelativeUser.belongsTo(models.ChatRoom, {
-      foreignKey: "room_id",
-    });
-  }
+  //關聯表
+  declare chat_room?: ChatRoom;
+  declare user?: User;
 }
 
 // 3. 初始化 model
@@ -94,4 +89,18 @@ export function initChatRoomRelativeUserModel(
   );
 
   return ChatRoomRelativeUser;
+}
+
+export function associateChatRoomRelativeUserModel(models: {
+  ChatRoom: typeof ChatRoom;
+  User: typeof User;
+}) {
+  ChatRoomRelativeUser.belongsTo(models.ChatRoom, {
+    foreignKey: "room_id",
+    targetKey: "id",
+  });
+  ChatRoomRelativeUser.belongsTo(models.User, {
+    foreignKey: "user_id",
+    targetKey: "id",
+  });
 }

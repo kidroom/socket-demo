@@ -2,78 +2,72 @@
 import ChatList from "../components/chat_list";
 import ChatMessages from "../components/chat_message";
 import "../styles/chat.css";
-import { useState } from "react";
+import axios from "axios";
+import { useState, useEffect } from "react";
+import { RoomList, ChatRecord } from "../models/chat";
 
-interface Message {
-  sender: "me" | "other" | string;
-  text: string;
+async function getChatRecordAsync(
+  room_id: string
+): Promise<ChatRecord[] | null> {
+  try {
+    const response = await axios.post(
+      "http://localhost:5010/api/chat/get_chat_record",
+      { room_id }, // JSON body
+      {
+        withCredentials: true, // 傳送 cookie
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const records = response.data;
+
+    return records;
+  } catch (error) {
+    console.log(error);
+  }
+  return null;
 }
-
-interface Chat {
-  id: string;
-  name: string;
-  messages?: Message[];
-}
-
-const DUMMY_CHATS: Chat[] = [
-  {
-    id: "1",
-    name: "小明",
-    messages: [
-      { sender: "me", text: "你好嗎？" },
-      { sender: "other", text: "我很好，謝謝！" },
-    ],
-  },
-  {
-    id: "2",
-    name: "群組聊天",
-    messages: [
-      { sender: "A", text: "大家早安！" },
-      { sender: "B", text: "早安！" },
-    ],
-  },
-  { id: "3", name: "技術交流", messages: [] },
-];
 
 const IndexPage: React.FC = () => {
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [roomList, setRoomList] = useState<RoomList[] | null>(null);
+  const [selectedChatName, setselectedChatName] = useState<string | null>(null);
+  const [selectedChat, setSelectedChat] = useState<ChatRecord[] | null>(null);
 
-  const handleSelectChat = (chatId: string) => {
-    const chat = DUMMY_CHATS.find((c) => c.id === chatId);
-    setSelectedChat(chat || null);
-  };
+  useEffect(() => {
+    const getRoomListAsync = async (): Promise<RoomList[] | null> => {
+      try {
+        const response = await axios.post(
+          "http://localhost:5010/api/chat/get_room_list"
+        );
+        const rooms = response.data;
+        setRoomList(rooms);
 
-  const getRoomList = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login with:", account, password);
-
-    try {
-      const response = await axios.post(
-        "http://localhost:5010/api/user/login",
-        {
-          account,
-          password,
-        }
-      );
-      const { token } = response.data;
-      // 將 token 儲存到 localStorage 或 cookie 中
-      localStorage.setItem("authToken", token);
-      router.push("/chat");
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        setMessage(error.response?.data.message || "登入失敗");
-      } else if (error instanceof Error) {
-        setMessage(error.message || "登入失敗");
-      } else {
-        setMessage("Unknown error");
+        return rooms;
+      } catch (error) {
+        console.log(error);
       }
+      return null;
+    };
+
+    getRoomListAsync();
+  }, []);
+
+  const handleSelectChat = async (chatId: string) => {
+    const chat = roomList?.find((c) => c.room_id === chatId);
+    if (!chat) {
+      console.log("取得選取得聊天室失敗");
+      return;
     }
+    const record = await getChatRecordAsync(chat.room_id);
+    setselectedChatName(chat.room_name || null);
+    setSelectedChat(record || null);
   };
 
   return (
     <div className="container">
-      <ChatList chats={DUMMY_CHATS} onSelectChat={handleSelectChat} />
-      <ChatMessages chat={selectedChat} />
+      <ChatList chats={roomList} onSelectChat={handleSelectChat} />
+      <ChatMessages chat_name={selectedChatName} chat={selectedChat} />
     </div>
   );
 };

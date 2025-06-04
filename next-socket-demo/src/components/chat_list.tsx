@@ -1,14 +1,10 @@
 // components/ChatList.tsx
 import "../styles/chat_list.css";
 import { useState } from "react";
-
-interface Chat {
-  id: string;
-  name: string;
-}
+import { RoomList } from "../models/chat";
 
 interface ChatListProps {
-  chats: Chat[];
+  chats: RoomList[] | null;
   onSelectChat: (chatId: string) => void;
 }
 
@@ -24,13 +20,13 @@ const ChatList: React.FC<ChatListProps> = ({ chats, onSelectChat }) => {
     <div className="chatList">
       <h2>聊天列表</h2>
       <ul>
-        {chats.map((chat) => (
+        {chats?.map((chat) => (
           <li
-            key={chat.id}
-            className={chat.id === activeChat ? "active" : ""}
-            onClick={() => handleChatClick(chat.id)}
+            key={chat.room_id}
+            className={chat.room_id === activeChat ? "active" : ""}
+            onClick={() => handleChatClick(chat.room_id)}
           >
-            {chat.name}
+            {chat.room_name}
           </li>
         ))}
       </ul>
