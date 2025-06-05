@@ -17,7 +17,30 @@ class App {
   }
 
   private middleware(): void {
-    this.app.use(cors());
+    // 定義允許的來源列表
+    const allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
+    this.app.use(
+      cors({
+        origin: (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error("Not allowed by CORS"));
+          }
+        },
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // 允許的 HTTP 方法
+        credentials: true, // <--- 允許發送和接收 cookies/Authorization headers 等 credentials
+        optionsSuccessStatus: 200, // 預檢請求的成功狀態碼
+        allowedHeaders: [
+          "Origin",
+          "X-Requested-With",
+          "Content-Type",
+          "Accept",
+          "Authorization",
+          "Cookie",
+        ],
+      })
+    );
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(cookieParser());

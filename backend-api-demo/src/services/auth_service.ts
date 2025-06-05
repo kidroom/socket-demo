@@ -27,17 +27,22 @@ class AuthService {
    * @param token
    * @returns
    */
-  async CheckTokenAsync(token: any): Promise<Boolean> {
+  async CheckTokenAsync(
+    token: any,
+    user_agent: string | undefined
+  ): Promise<Boolean> {
     if (token) {
       const verifiedPayload = TryParseJwt(token);
       if (!verifiedPayload) {
         return false;
       }
 
+      const device = await GetDevice(user_agent);
+
       let tokens = await user_repository.GetTokenAsync(
-        verifiedPayload.username,
+        verifiedPayload.userId,
         token,
-        verifiedPayload.device
+        device.vendor
       );
 
       if (tokens && tokens?.length > 1) {

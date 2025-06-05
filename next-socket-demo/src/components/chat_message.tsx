@@ -3,17 +3,12 @@ import "../styles/chat_message.css";
 import { useState, FormEvent } from "react";
 import { ChatRecord } from "../models/chat";
 
-interface Message {
-  sender: "me" | "other" | string;
-  text: string;
-}
-
 interface ChatMessagesProps {
   chat_name: string | null;
   chat: ChatRecord[] | null;
 }
 
-const ChatMessages: React.FC<ChatMessagesProps> = ({ chat }) => {
+const ChatMessages: React.FC<ChatMessagesProps> = ({ chat_name, chat }) => {
   const [newMessage, setNewMessage] = useState<string>("");
 
   const handleSendMessage = (event: FormEvent) => {

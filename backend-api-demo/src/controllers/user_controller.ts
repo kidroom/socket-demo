@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import user_service from "../services/user_service";
 import auth_service from "../services/auth_service";
+import { MyCustomActionFilter, LogActionFilter } from "../libs/filter";
 
 class UserController {
   /** 使用者註冊
@@ -8,6 +9,7 @@ class UserController {
    * @param res
    * @returns
    */
+  @MyCustomActionFilter(new LogActionFilter())
   public async Register(req: Request, res: Response): Promise<void> {
     const { account, password } = req.body;
 
@@ -32,10 +34,12 @@ class UserController {
    * @param res
    * @returns
    */
+  @MyCustomActionFilter(new LogActionFilter())
   public async Login(req: Request, res: Response): Promise<void> {
     const cookies = req.cookies;
     const user_agent = req.headers["user-agent"];
-    if (await auth_service.CheckTokenAsync(cookies["token"])) {
+    if (await auth_service.CheckTokenAsync(cookies["token"], user_agent)) {
+      console.log(`already have token`);
       res.json({ message: cookies["token"] });
       return;
     }
@@ -55,12 +59,15 @@ class UserController {
 
     const token = await auth_service.SetTokenAsync(user.id, user_agent);
 
-    res.cookie("token", token, {
-      expires: new Date(Date.now() + 1 * 360000),
-      httpOnly: true,
-    });
-
-    res.json({ message: token });
+    res
+      .cookie("token", token, {
+        httpOnly: true, // ✅ 建議保留
+        secure: false, // ✅ 若使用 http，設 false；使用 https 才設 true
+        sameSite: "none", // ✅ 跨網域前端要設為 lax 或 none
+        maxAge: 60 * 60 * 1000, // 1 小時
+        expires: new Date(Date.now() + 60 * 60 * 1000), // 1 小時後過期
+      })
+      .json({ message: token });
   }
 
   /** 重設密碼
@@ -68,6 +75,7 @@ class UserController {
    * @param res
    * @returns
    */
+  @MyCustomActionFilter(new LogActionFilter())
   public async ResetPassword(req: Request, res: Response): Promise<void> {
     const { account, password } = req.body;
 

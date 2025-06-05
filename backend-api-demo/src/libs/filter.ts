@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import auth_service from "../services/auth_service";
 
 // 定義 Action Filter 的介面
 interface IActionFilter {
@@ -71,14 +72,20 @@ export function MyCustomActionFilter(filterInstance: IActionFilter) {
 
 // 1. 驗證身分驗證的 Filter
 export class AuthFilter extends ActionFilterBase {
-  onActionExecuting(req: Request, res: Response, next: NextFunction): void {
-    const authHeader = req.headers["authorization"];
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
-      if (token === "my-secret-token") {
-        // 簡單的 token 驗證
+  async onActionExecuting(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const cookies = req.cookies;
+    const user_agent = req.headers["user-agent"];
+    console.log(`AuthFilter cookie: ${JSON.stringify(cookies)}`);
+    console.log(`AuthFilter token: ${cookies.token}`);
+    console.log(`AuthFilter user_agent: ${user_agent}`);
+    if (cookies["token"]) {
+      if (await auth_service.CheckTokenAsync(cookies["token"], user_agent)) {
         console.log("AuthFilter: Token Validated");
-        next(); // 繼續執行 Action
+        next();
       } else {
         console.log("AuthFilter: Invalid Token");
         res.status(401).send("Unauthorized: Invalid Token");
