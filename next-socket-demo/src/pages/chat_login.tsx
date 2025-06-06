@@ -1,8 +1,10 @@
 import { useState } from "react";
-import axios, { AxiosError } from "axios";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { authService } from "@/services/api";
+import { useUserStore } from "@/stores";
 import "../styles/login.css";
+import { AxiosError } from "axios";
 
 export default function LoginPage() {
   const [account, setAccount] = useState("");
@@ -10,30 +12,34 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const router = useRouter();
 
+  const { login } = useUserStore();
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login with:", account, password);
-
+    setMessage("");
+    setIsLoading(true);
+    
     try {
-      const response = await axios.post(
-        "http://localhost:5010/api/user/login",
-        {
-          account,
-          password,
-        }
-      );
-      const { token } = response.data;
-      // 將 token 儲存到 localStorage 或 cookie 中
-      localStorage.setItem("authToken", token);
+      const response = await authService.login({
+        account,
+        password
+      });
+      
+      login(response.user, response.token);
+      
       router.push("/chat");
     } catch (error) {
+      console.error('Login error:', error);
       if (error instanceof AxiosError) {
-        setMessage(error.response?.data.message || "登入失敗");
+        setMessage(error.response?.data?.message || "登入失敗");
       } else if (error instanceof Error) {
         setMessage(error.message || "登入失敗");
       } else {
-        setMessage("Unknown error");
+        setMessage("登入時發生未知錯誤");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 

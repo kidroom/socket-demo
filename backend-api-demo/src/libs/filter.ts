@@ -3,17 +3,33 @@ import auth_service from "../services/auth_service";
 
 // 定義 Action Filter 的介面
 interface IActionFilter {
-  onActionExecuting?(req: Request, res: Response, next: NextFunction): void;
-  onActionExecuted?(req: Request, res: Response, next: NextFunction): void;
+  onActionExecuting?(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>;
+  onActionExecuted?(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>;
 }
 
 // 基礎 Action Filter 類別 (可選，提供一個範本)
 abstract class ActionFilterBase implements IActionFilter {
   // 預設為空實現，子類可覆寫
-  onActionExecuting(req: Request, res: Response, next: NextFunction): void {
+  async onActionExecuting(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     next();
   }
-  onActionExecuted(req: Request, res: Response, next: NextFunction): void {
+  async onActionExecuted(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     next();
   }
 }
@@ -35,14 +51,23 @@ export function MyCustomActionFilter(filterInstance: IActionFilter) {
     ) {
       // 在 Action 執行前
       if (filterInstance.onActionExecuting) {
-        filterInstance.onActionExecuting(req, res, () => {
+        await filterInstance.onActionExecuting(req, res, async () => {
           // next() 被呼叫後才執行原始方法
-          originalMethod
+          if (res.headersSent) {
+            console.error(`[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE calling originalMethod. Route: ${req.originalUrl}, Filter: ${filterInstance.constructor.name}`);
+            // Depending on desired behavior, you might return here to prevent calling originalMethod
+            // return; 
+          }
+          await originalMethod
             .apply(this, [req, res, next])
-            .then(() => {
+            .then(async () => {
               // 在 Action 執行後
+              if (res.headersSent && filterInstance.onActionExecuted) {
+                console.log(`[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE onActionExecuted. Route: ${req.originalUrl}, Filter: ${filterInstance.constructor.name}. Skipping onActionExecuted.`);
+              }
               if (filterInstance.onActionExecuted) {
-                filterInstance.onActionExecuted(req, res, next);
+                // Pass a dummy next to prevent express from continuing the middleware chain after the response
+                await filterInstance.onActionExecuted(req, res, () => {});
               }
             })
             .catch((err: Error) => {
@@ -51,11 +76,18 @@ export function MyCustomActionFilter(filterInstance: IActionFilter) {
         });
       } else {
         // 如果沒有 onActionExecuting，直接執行原始方法
-        originalMethod
+        if (res.headersSent) { // Also check here if no onActionExecuting
+            console.error(`[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE calling originalMethod (no onActionExecuting). Route: ${req.originalUrl}`);
+        }
+        await originalMethod
           .apply(this, [req, res, next])
-          .then(() => {
+          .then(async () => {
+            if (res.headersSent && filterInstance.onActionExecuted) { // And here
+                console.log(`[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE onActionExecuted (no onActionExecuting). Route: ${req.originalUrl}. Skipping onActionExecuted.`);
+            }
             if (filterInstance.onActionExecuted) {
-              filterInstance.onActionExecuted(req, res, next);
+              // Pass a dummy next to prevent express from continuing the middleware chain after the response
+              await filterInstance.onActionExecuted(req, res, () => {});
             }
           })
           .catch((err: Error) => {
@@ -80,6 +112,7 @@ export class AuthFilter extends ActionFilterBase {
     const cookies = req.cookies;
     const user_agent = req.headers["user-agent"];
     console.log(`AuthFilter cookie: ${JSON.stringify(cookies)}`);
+    console.log(`AuthFilter origin cookie: ${JSON.stringify(cookies)}`);
     console.log(`AuthFilter token: ${cookies.token}`);
     console.log(`AuthFilter user_agent: ${user_agent}`);
     if (cookies["token"]) {
@@ -89,14 +122,20 @@ export class AuthFilter extends ActionFilterBase {
       } else {
         console.log("AuthFilter: Invalid Token");
         res.status(401).send("Unauthorized: Invalid Token");
+        return;
       }
     } else {
       console.log("AuthFilter: No Token Provided");
       res.status(401).send("Unauthorized: No Token");
+      return;
     }
   }
 
-  onActionExecuted(req: Request, res: Response, next: NextFunction): void {
+  async onActionExecuted(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     console.log("AuthFilter: Action executed.");
     next();
   }
@@ -104,7 +143,11 @@ export class AuthFilter extends ActionFilterBase {
 
 // 2. 日誌記錄的 Filter
 export class LogActionFilter extends ActionFilterBase {
-  onActionExecuting(req: Request, res: Response, next: NextFunction): void {
+  async onActionExecuting(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     const startTime = Date.now();
     (req as any)._startTime = startTime; // 將開始時間儲存在 req 物件上
     console.log(
@@ -115,7 +158,11 @@ export class LogActionFilter extends ActionFilterBase {
     next();
   }
 
-  onActionExecuted(req: Request, res: Response, next: NextFunction): void {
+  async onActionExecuted(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     const endTime = Date.now();
     const duration = endTime - (req as any)._startTime;
     console.log(
@@ -125,12 +172,12 @@ export class LogActionFilter extends ActionFilterBase {
   }
 }
 
-// 3. 處理錯誤的 Filter (作為 ActionFilterBase 的範例，但通常錯誤處理會放在 Express 中介層鏈的末端)
 export class ErrorHandlingFilter extends ActionFilterBase {
-  onActionExecuted(req: Request, res: Response, next: NextFunction): void {
-    // 這個方法在 Action 執行後被調用。
-    // 如果 Action 中發生了錯誤，通常會被 Express 的錯誤處理中介層捕獲。
-    // 這個 filter 可以在這裡做一些收尾工作，但實際的錯誤響應通常在更通用的錯誤中介層處理。
+  async onActionExecuted(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     console.log("ErrorHandlingFilter: Action executed (or attempted).");
     next();
   }

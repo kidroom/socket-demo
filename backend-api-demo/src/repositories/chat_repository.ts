@@ -9,7 +9,9 @@ class UserRepository {
    * @param id
    * @returns
    */
-  async GetRoomList(user_id: string): Promise<ChatRoomRelativeUser[] | null> {
+  async GetRoomListAsync(
+    user_id: string
+  ): Promise<ChatRoomRelativeUser[] | null> {
     try {
       await db.sequelize.authenticate();
       console.log("資料庫連線成功！");
@@ -41,7 +43,7 @@ class UserRepository {
    * @param room_id
    * @returns
    */
-  async GetChatContent(room_id: string): Promise<ChatRoomRecord[] | null> {
+  async GetChatContentAsync(room_id: string): Promise<ChatRoomRecord[] | null> {
     try {
       await db.sequelize.authenticate();
       console.log("資料庫連線成功！");

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/router";
+import Link from "next/link";
+import { authService } from "@/services/api";
+import { AxiosError } from "axios";
 import "../styles/register.css";
 
 const RegisterPage = () => {
@@ -14,22 +16,26 @@ const RegisterPage = () => {
     setMessage("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5010/api/user/register",
-        {
-          account,
-          password,
-        }
-      );
-      setMessage(response.data.message);
-      if (response.status === 201) {
-        router.push("/login");
+      const response = await authService.register({
+        account,
+        password,
+      });
+      
+      setMessage(response.message);
+      // Redirect to login page after successful registration
+      if (response.message.includes("成功")) {
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
       }
     } catch (error) {
-      if (error instanceof Error) {
+      console.error('Registration error:', error);
+      if (error instanceof AxiosError) {
+        setMessage(error.response?.data?.message || "註冊失敗");
+      } else if (error instanceof Error) {
         setMessage(error.message || "註冊失敗");
       } else {
-        setMessage("Unknown error");
+        setMessage("註冊時發生未知錯誤");
       }
     }
   };
@@ -81,4 +87,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
-import Link from "next/link";

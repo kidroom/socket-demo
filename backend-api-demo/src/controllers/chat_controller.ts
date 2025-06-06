@@ -13,11 +13,11 @@ class ChatController {
    */
   @MyCustomActionFilter(new AuthFilter())
   @MyCustomActionFilter(new LogActionFilter())
-  public async GetRoomList(req: Request, res: Response): Promise<void> {
+  public async GetRoomListAsync(req: Request, res: Response): Promise<void> {
     const cookies = req.cookies;
-    const rooms = await chatS_service.GetRoomList(cookies["token"]);
+    const rooms = await chatS_service.GetRoomListAsync(cookies["token"]);
 
-    res.status(200).json({ message: "成功", data: rooms });
+    res.apiSuccess(rooms);
   }
 
   /** 取得聊天內容
@@ -26,15 +26,18 @@ class ChatController {
    */
   @MyCustomActionFilter(new AuthFilter())
   @MyCustomActionFilter(new LogActionFilter())
-  public async GetChatRoomRecord(req: Request, res: Response): Promise<void> {
+  public async GetChatRoomRecordAsync(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     const cookies = req.cookies;
     const { room_id } = req.body;
-    const records = await chatS_service.GetChatRoomRecord(
+    const records = await chatS_service.GetChatRoomRecordAsync(
       cookies["token"],
       room_id
     );
 
-    res.status(200).json({ message: "成功", data: records });
+    res.apiSuccess(records);
   }
 }
 

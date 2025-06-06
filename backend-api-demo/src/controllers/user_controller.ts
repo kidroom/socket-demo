@@ -26,7 +26,7 @@ class UserController {
 
     await user_service.UserRegisterAsync(account, password);
 
-    res.status(201).json({ message: "註冊成功" });
+    res.apiSuccess({}, "註冊成功", 201);
   }
 
   /** 登入
@@ -59,15 +59,7 @@ class UserController {
 
     const token = await auth_service.SetTokenAsync(user.id, user_agent);
 
-    res
-      .cookie("token", token, {
-        httpOnly: true, // ✅ 建議保留
-        secure: false, // ✅ 若使用 http，設 false；使用 https 才設 true
-        sameSite: "none", // ✅ 跨網域前端要設為 lax 或 none
-        maxAge: 60 * 60 * 1000, // 1 小時
-        expires: new Date(Date.now() + 60 * 60 * 1000), // 1 小時後過期
-      })
-      .json({ message: token });
+    res.apiSuccess(token);
   }
 
   /** 重設密碼
@@ -91,13 +83,7 @@ class UserController {
       return;
     }
 
-    res.json({ message: "修改完成" });
-  }
-
-  public protectedRoute(req: Request, res: Response): void {
-    res.json({
-      message: `歡迎，${(req as any).user.username}！這是受保護的內容。`,
-    });
+    res.apiSuccess({}, "修改完成");
   }
 }
 

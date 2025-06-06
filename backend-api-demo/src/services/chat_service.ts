@@ -2,12 +2,14 @@ import { TryParseJwt } from "../libs/jwt_helper";
 import chat_repository from "../repositories/chat_repository";
 
 class ChatService {
-  async GetRoomList(token: string): Promise<any[] | null> {
+  async GetRoomListAsync(token: string): Promise<any[] | null> {
     const verifiedPayload = TryParseJwt(token);
     if (!verifiedPayload) {
       return null;
     }
-    const rooms = await chat_repository.GetRoomList(verifiedPayload.userId);
+    const rooms = await chat_repository.GetRoomListAsync(
+      verifiedPayload.userId
+    );
     if (rooms && rooms.length <= 0) {
       return null;
     }
@@ -19,13 +21,13 @@ class ChatService {
     return result ?? null;
   }
 
-  async GetChatRoomRecord(token: string, room_id: string) {
+  async GetChatRoomRecordAsync(token: string, room_id: string) {
     const verifiedPayload = TryParseJwt(token);
     if (!verifiedPayload) {
       return null;
     }
 
-    const records = await chat_repository.GetChatContent(room_id);
+    const records = await chat_repository.GetChatContentAsync(room_id);
     if (records && records.length <= 0) {
       return null;
     }
