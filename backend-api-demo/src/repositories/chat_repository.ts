@@ -3,6 +3,7 @@ const db = require("../libs/database"); // 注意：CommonJS 的引用方式
 import { ChatRoom } from "../../database/models/chat_room";
 import { ChatRoomRecord } from "../../database/models/chat_room_record";
 import { ChatRoomRelativeUser } from "../../database/models/chat_room_relative_user";
+import { User } from "../../database/models/user";
 
 class UserRepository {
   /** 查詢使用者
@@ -48,6 +49,13 @@ class UserRepository {
       await db.sequelize.authenticate();
       console.log("資料庫連線成功！");
       const rooms = await ChatRoomRecord.findAll({
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["name"],
+          },
+        ],
         where: {
           room_id: {
             [Op.eq]: room_id,

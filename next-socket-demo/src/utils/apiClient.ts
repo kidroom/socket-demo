@@ -1,6 +1,7 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ApiResponse } from '@/types/api';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { ApiResponse, ApiError } from '@/types/api';
 import Cookies from 'js-cookie';
+import { useUserStore } from '@/stores/userStore';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5010/api';
 
@@ -19,7 +20,7 @@ class ApiClient {
     // Add request interceptor for auth token
     this.axios.interceptors.request.use(
       (config) => {
-        const token = Cookies.get('token');
+        const token = useUserStore.getState().token;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -58,44 +59,86 @@ class ApiClient {
     );
   }
 
-  private async request<T>(config: AxiosRequestConfig): Promise<T> {
+  private async request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
     try {
-      const response: AxiosResponse<ApiResponse<T>> = await this.axios(config);
-      return response.data.data!;
+      const response: AxiosResponse<ApiResponse<T>> = await this.axios({
+        ...config,
+        validateStatus: (status) => status >= 200 && status < 500, // Don't throw for 4xx errors
+      });
+
+      if (!response.data.success) {
+        const errorMessage = response.data.message || 'API request failed';
+        const error: ApiError = new Error(errorMessage);
+        error.response = {
+          data: {
+            success: false,
+            message: errorMessage,
+            error: {
+              message: errorMessage,
+              ...(response.data.error || {})
+            },
+            ...(response.data.error ? { error: response.data.error } : {}),
+            ...(response.data.message ? { message: response.data.message } : {})
+          },
+          status: response.status,
+          statusText: response.statusText,
+        };
+        throw error;
+      }
+
+      return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw error.response?.data || error.message;
+        const axiosError = error as AxiosError<ApiResponse>;
+        const apiError: ApiError = new Error(
+          axiosError.response?.data?.message ||
+          axiosError.message ||
+          'An unexpected error occurred'
+        );
+        apiError.response = {
+          data: {
+            success: false,
+            message: apiError.message,
+            error: {
+              message: apiError.message,
+              ...(axiosError.response?.data?.error || {})
+            },
+            ...(axiosError.response?.data || {})
+          },
+          status: axiosError.response?.status || 500,
+          statusText: axiosError.response?.statusText || 'Internal Server Error',
+        };
+        throw apiError;
       }
       throw error;
     }
   }
 
-  // GET request
-  public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request({ ...config, method: 'GET', url });
+  public async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'GET', url });
   }
 
-  // POST request
   public async post<T>(
     url: string,
     data?: any,
     config?: AxiosRequestConfig
-  ): Promise<T> {
-    return this.request({ ...config, method: 'POST', url, data });
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'POST', url, data });
   }
 
-  // PUT request
   public async put<T>(
     url: string,
     data?: any,
     config?: AxiosRequestConfig
-  ): Promise<T> {
-    return this.request({ ...config, method: 'PUT', url, data });
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'PUT', url, data });
   }
 
-  // DELETE request
-  public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request({ ...config, method: 'DELETE', url });
+  public async delete<T>(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'DELETE', url });
   }
 }
 

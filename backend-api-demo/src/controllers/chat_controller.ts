@@ -5,6 +5,7 @@ import {
   AuthFilter,
   LogActionFilter,
 } from "../libs/filter";
+import { GetToken } from "../libs/http_helper";
 
 class ChatController {
   /** 取得使用者聊天列表
@@ -14,8 +15,8 @@ class ChatController {
   @MyCustomActionFilter(new AuthFilter())
   @MyCustomActionFilter(new LogActionFilter())
   public async GetRoomListAsync(req: Request, res: Response): Promise<void> {
-    const cookies = req.cookies;
-    const rooms = await chatS_service.GetRoomListAsync(cookies["token"]);
+    const token = GetToken(req);
+    const rooms = await chatS_service.GetRoomListAsync(token!);
 
     res.apiSuccess(rooms);
   }
@@ -30,12 +31,9 @@ class ChatController {
     req: Request,
     res: Response
   ): Promise<void> {
-    const cookies = req.cookies;
+    const token = GetToken(req);
     const { room_id } = req.body;
-    const records = await chatS_service.GetChatRoomRecordAsync(
-      cookies["token"],
-      room_id
-    );
+    const records = await chatS_service.GetChatRoomRecordAsync(token!, room_id);
 
     res.apiSuccess(records);
   }

@@ -1,22 +1,103 @@
 import { apiClient } from '@/utils/apiClient';
-import { GetRoomListResponse, GetChatRecordsRequest, GetChatRecordsResponse } from '@/types/api';
 
+// Types
+export interface ChatRoom {
+  room_id: string;
+  room_name: string;
+}
+
+export interface ChatMessage {
+  user_id: string;
+  user_name: string;
+  room_id: string;
+  sender: number;
+  sort: number;
+  message: string;
+  create_date:Date;
+}
+
+export interface GetRoomListResponse {
+  rooms: ChatRoom[];
+}
+
+export interface GetChatRecordsRequest {
+  room_id: string;
+  limit?: number;
+  before?: string; // timestamp
+}
+
+export interface GetChatRecordsResponse {
+  messages: ChatMessage[];
+  hasMore: boolean;
+}
+
+/**
+ * Chat service for handling chat-related operations
+ */
 export const chatService = {
-  // 取得聊天室列表
+  /**
+   * Get list of available chat rooms
+   * @returns List of chat rooms
+   */
   getRoomList: async (): Promise<GetRoomListResponse> => {
-    return apiClient.get<GetRoomListResponse>('/chat/get_room_list');
+    try {
+      console.log('[ChatService] Fetching chat room list');
+      const response = await apiClient.get<GetRoomListResponse>('/chat/get_room_list');
+      console.log(`[ChatService] Successfully fetched ${JSON.stringify(response.data)} `);
+      return response.data!;
+    } catch (error) {
+      console.error('[ChatService] Failed to fetch chat room list:', error);
+      throw error;
+    }
   },
 
-  // 取得聊天室訊息記錄
-  getChatRecords: async (roomId: string): Promise<GetChatRecordsResponse> => {
-    return apiClient.post<GetChatRecordsResponse>('/chat/get_chat_record', { room_id: roomId });
+  /**
+   * Get chat records for a specific room
+   * @param roomId ID of the chat room
+   * @param limit Maximum number of messages to return
+   * @param before Fetch messages before this timestamp for pagination
+   * @returns Chat messages and pagination info
+   */
+  getChatRecords: async (roomId: string, limit?: number, before?: string): Promise<GetChatRecordsResponse> => {
+    try {
+      console.log(`[ChatService] Fetching messages for room: ${roomId}`);
+      const params: GetChatRecordsRequest = { room_id: roomId };
+      
+      if (limit) {
+        params.limit = limit;
+        console.log(`[ChatService] Limiting to ${limit} messages`);
+      }
+      
+      if (before) {
+        params.before = before;
+        console.log(`[ChatService] Fetching messages before: ${before}`);
+      }
+      
+      const response = await apiClient.post<GetChatRecordsResponse>('/chat/get_chat_record', params);
+      console.log(`[ChatService] Successfully fetched ${response.data?.messages?.length || 0} messages`);
+      return response.data!;
+    } catch (error) {
+      console.error(`[ChatService] Failed to fetch messages for room ${roomId}:`, error);
+      throw error;
+    }
   },
 
-  // 傳送訊息
+  /**
+   * Send a message to a chat room
+   * @param roomId ID of the chat room
+   * @param message Message content
+   */
   sendMessage: async (roomId: string, message: string): Promise<void> => {
-    return apiClient.post('/chat/send_message', {
-      room_id: roomId,
-      message: message
-    });
+    try {
+      console.log(`[ChatService] Sending message to room: ${roomId}`);
+      await apiClient.post('/chat/send_message', {
+        room_id: roomId,
+        message: message
+      });
+      console.log('[ChatService] Message sent successfully');
+    } catch (error) {
+      console.error(`[ChatService] Failed to send message to room ${roomId}:`, error);
+      throw error;
+    }
   }
 };

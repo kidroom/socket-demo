@@ -43,6 +43,10 @@ export class ChatRoomRecord
   declare createdAt: Date;
   declare updatedAt?: Date | null;
   declare deletedAt?: Date | null;
+
+  //關聯表
+  declare chat_room?: ChatRoom;
+  declare user?: User;
 }
 
 // 3. 初始化 model

@@ -59,7 +59,16 @@ class UserController {
 
     const token = await auth_service.SetTokenAsync(user.id, user_agent);
 
-    res.apiSuccess(token);
+    res.apiSuccess({
+      user: {
+        id: user.id,
+        account: user.account,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      },
+      token: token,
+    });
   }
 
   /** 重設密碼

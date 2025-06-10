@@ -1,11 +1,18 @@
-export class ChatMessageModel {
-  sender: string;
-  receive: string;
+export interface ChatMessageModel {
+  id?: string | number;
+  sender: string | number;
+  senderName?: string;
+  receive?: string;
   content: string;
+  timestamp?: string | Date;
+  isCurrentUser?: boolean;
+  roomId?: string;
+}
 
-  constructor(data: { sender: string; receive: string; content: string }) {
-    this.sender = data.sender;
-    this.receive = data.receive;
-    this.content = data.content;
-  }
+export interface RoomMessageData {
+  roomId: string;
+  sender: string | number;
+  senderName: string;
+  content: string;
+  timestamp?: string;
 }

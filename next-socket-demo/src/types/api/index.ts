@@ -1,5 +1,5 @@
 // Common response type for all API responses
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T> {
   success: boolean;
   statusCode: number;
   message: string;

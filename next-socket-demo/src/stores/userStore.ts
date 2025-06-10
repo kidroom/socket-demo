@@ -5,15 +5,15 @@ import Cookies from 'js-cookie';
 
 // Types
 export interface User {
-  id: string | number;
+  id: string;
   account: string;
   name: string;
   email?: string | null;
   phone?: string | null;
-  token?: string;
 }
 
 interface UserState {
+  token: string | null;
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -45,40 +45,27 @@ const createCustomStorage = (type: 'local' | 'session' | 'memory' = 'local'): St
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
+      token: null,
       user: null,
       isAuthenticated: false,
       isLoading: false,
       setLoading: (isLoading) => set({ isLoading }),
       login: async (user, token) => {
-        set({ isLoading: true });
         try {
-          // Set the token in an HTTP-only cookie
-          Cookies.set('token', token, { 
-            expires: 7, // 7 days
-            path: '/',
-            sameSite: 'strict',
-            secure: process.env.NODE_ENV === 'production',
-            httpOnly: false // Note: For httpOnly, you'll need to set it server-side
-          });
-          
           set({
-            user: { ...user, token },
+            token: token,
+            user: user,
             isAuthenticated: true,
-            isLoading: false,
           });
         } catch (error) {
-          set({ isLoading: false });
           throw error;
         }
       },
       logout: () => {
-        // Remove the token cookie on logout
-        Cookies.remove('token', { path: '/' });
-        
         set({
           user: null,
+          token: null,
           isAuthenticated: false,
-          isLoading: false,
         });
       },
       updateUser: (updates) =>
@@ -88,8 +75,9 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: 'user-storage', // unique name for the storage key
-      storage: createJSONStorage(() => createCustomStorage('local')), // default to localStorage
+      storage: createJSONStorage(() => createCustomStorage()), // default to localStorage
       partialize: (state) => ({
+        token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
         isLoading: state.isLoading,
@@ -103,4 +91,4 @@ export const useCurrentUser = () => useUserStore((state) => state.user);
 export const useIsAuthenticated = () => useUserStore((state) => state.isAuthenticated);
 
 // Example of a selector
-export const useUserToken = () => useUserStore((state) => state.user?.token);
+export const useUserToken = () => useUserStore((state) => state.token);

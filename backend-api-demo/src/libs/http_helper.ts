@@ -1,4 +1,5 @@
 import UAParser from "ua-parser-js";
+import { Request, Response, NextFunction } from "express";
 
 export class Device {
   declare browser: string;
@@ -22,4 +23,24 @@ export async function GetDevice(
   device.model = parser.device.model || "";
 
   return device;
+}
+
+export function GetToken(req: Request): string | null {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    console.log("Found token in auth");
+    const token = authHeader.split(" ")[1];
+
+    return token;
+  }
+
+  const cookies = req.cookies;
+  if (cookies && cookies.token) {
+    console.log("Found token in cookies");
+
+    return cookies.token;
+  }
+
+  return null;
 }

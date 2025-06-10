@@ -13,24 +13,21 @@ export default function LoginPage() {
   const router = useRouter();
 
   const { login } = useUserStore();
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
-    setIsLoading(true);
-    
+
     try {
       const response = await authService.login({
         account,
-        password
+        password,
       });
-      
       login(response.user, response.token);
-      
+
       router.push("/chat");
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       if (error instanceof AxiosError) {
         setMessage(error.response?.data?.message || "登入失敗");
       } else if (error instanceof Error) {
@@ -39,7 +36,6 @@ export default function LoginPage() {
         setMessage("登入時發生未知錯誤");
       }
     } finally {
-      setIsLoading(false);
     }
   };
 

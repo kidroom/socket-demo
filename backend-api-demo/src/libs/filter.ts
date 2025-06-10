@@ -54,16 +54,20 @@ export function MyCustomActionFilter(filterInstance: IActionFilter) {
         await filterInstance.onActionExecuting(req, res, async () => {
           // next() 被呼叫後才執行原始方法
           if (res.headersSent) {
-            console.error(`[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE calling originalMethod. Route: ${req.originalUrl}, Filter: ${filterInstance.constructor.name}`);
+            console.error(
+              `[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE calling originalMethod. Route: ${req.originalUrl}, Filter: ${filterInstance.constructor.name}`
+            );
             // Depending on desired behavior, you might return here to prevent calling originalMethod
-            // return; 
+            // return;
           }
           await originalMethod
             .apply(this, [req, res, next])
             .then(async () => {
               // 在 Action 執行後
               if (res.headersSent && filterInstance.onActionExecuted) {
-                console.log(`[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE onActionExecuted. Route: ${req.originalUrl}, Filter: ${filterInstance.constructor.name}. Skipping onActionExecuted.`);
+                console.log(
+                  `[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE onActionExecuted. Route: ${req.originalUrl}, Filter: ${filterInstance.constructor.name}. Skipping onActionExecuted.`
+                );
               }
               if (filterInstance.onActionExecuted) {
                 // Pass a dummy next to prevent express from continuing the middleware chain after the response
@@ -76,14 +80,20 @@ export function MyCustomActionFilter(filterInstance: IActionFilter) {
         });
       } else {
         // 如果沒有 onActionExecuting，直接執行原始方法
-        if (res.headersSent) { // Also check here if no onActionExecuting
-            console.error(`[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE calling originalMethod (no onActionExecuting). Route: ${req.originalUrl}`);
+        if (res.headersSent) {
+          // Also check here if no onActionExecuting
+          console.error(
+            `[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE calling originalMethod (no onActionExecuting). Route: ${req.originalUrl}`
+          );
         }
         await originalMethod
           .apply(this, [req, res, next])
           .then(async () => {
-            if (res.headersSent && filterInstance.onActionExecuted) { // And here
-                console.log(`[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE onActionExecuted (no onActionExecuting). Route: ${req.originalUrl}. Skipping onActionExecuted.`);
+            if (res.headersSent && filterInstance.onActionExecuted) {
+              // And here
+              console.log(
+                `[MyCustomActionFilter - ${propertyKey}] Headers already sent BEFORE onActionExecuted (no onActionExecuting). Route: ${req.originalUrl}. Skipping onActionExecuted.`
+              );
             }
             if (filterInstance.onActionExecuted) {
               // Pass a dummy next to prevent express from continuing the middleware chain after the response
@@ -102,33 +112,65 @@ export function MyCustomActionFilter(filterInstance: IActionFilter) {
 
 // ------------------- 範例 Action Filter 實作 -------------------
 
-// 1. 驗證身分驗證的 Filter
+/** 身分驗證
+ */
 export class AuthFilter extends ActionFilterBase {
   async onActionExecuting(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const cookies = req.cookies;
+    const authHeader = req.headers.authorization;
     const user_agent = req.headers["user-agent"];
-    console.log(`AuthFilter cookie: ${JSON.stringify(cookies)}`);
-    console.log(`AuthFilter origin cookie: ${JSON.stringify(cookies)}`);
-    console.log(`AuthFilter token: ${cookies.token}`);
-    console.log(`AuthFilter user_agent: ${user_agent}`);
-    if (cookies["token"]) {
-      if (await auth_service.CheckTokenAsync(cookies["token"], user_agent)) {
-        console.log("AuthFilter: Token Validated");
-        next();
-      } else {
-        console.log("AuthFilter: Invalid Token");
-        res.status(401).send("Unauthorized: Invalid Token");
+
+    console.log(`AuthFilter - Request Headers: ${JSON.stringify(req.headers)}`);
+    console.log(`AuthFilter - User Agent: ${user_agent}`);
+
+    // Check for Bearer token in Authorization header
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      console.log(`AuthFilter: Found token in Authorization header`);
+
+      try {
+        if (await auth_service.CheckTokenAsync(token, user_agent)) {
+          console.log("AuthFilter: Token validated successfully");
+          next();
+          return;
+        } else {
+          console.log("AuthFilter: Token validation failed");
+          res.status(401).json({
+            success: false,
+            message: "Unauthorized: Invalid or expired token",
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("AuthFilter: Error validating token:", error);
+        res.status(500).json({
+          success: false,
+          message: "Internal server error during authentication",
+        });
         return;
       }
-    } else {
-      console.log("AuthFilter: No Token Provided");
-      res.status(401).send("Unauthorized: No Token");
-      return;
     }
+
+    // Fallback to check cookies (for backward compatibility if needed)
+    const cookies = req.cookies;
+    if (cookies && cookies.token) {
+      console.log("AuthFilter: Found token in cookies");
+      if (await auth_service.CheckTokenAsync(cookies.token, user_agent)) {
+        console.log("AuthFilter: Cookie token validated");
+        next();
+        return;
+      }
+    }
+
+    // No valid token found
+    console.log("AuthFilter: No valid authentication token found");
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized: No valid authentication token provided",
+    });
   }
 
   async onActionExecuted(
@@ -141,7 +183,8 @@ export class AuthFilter extends ActionFilterBase {
   }
 }
 
-// 2. 日誌記錄的 Filter
+/** 日誌記錄
+ */
 export class LogActionFilter extends ActionFilterBase {
   async onActionExecuting(
     req: Request,

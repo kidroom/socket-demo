@@ -1,83 +1,89 @@
-// pages/index.tsx
+import { useState, useEffect } from 'react';
 import ChatList from "../components/chat_list";
-import ChatMessages from "../components/chat_message";
 import "../styles/chat.css";
-import axios from "axios";
-import { useState, useEffect } from "react";
+import { chatService } from '../services/api/chatService';
 import { RoomList, ChatRecord } from "../models/chat";
+import { ChatMessage } from "../services/api/chatService";
+import ChatMessages from "../components/chat_message";
+import socket from "@/utils/socket";
+import { ChatMessageModel } from "@/types/socket";
 
-async function getChatRecordAsync(
-  room_id: string
-): Promise<ChatRecord[] | null> {
-  try {
-    const response = await axios.post(
-      "http://localhost:5010/api/chat/get_chat_record",
-      { room_id }, // JSON body
-      {
-        withCredentials: true, // 傳送 cookie
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const records = response.data;
+const ChatPage: React.FC = () => {
+  const [roomList, setRoomList] = useState<RoomList[]>([]);
+  const [selectedChatName, setSelectedChatName] = useState<string>('');
+  const [selectedChat, setSelectedChat] = useState<ChatRecord[]>([]);
 
-    return records;
-  } catch (error) {
-    console.log(error);
-  }
-  return null;
-}
+  // Format chat records to match the expected format
+  const formatChatRecords = (messages: ChatMessage[]): ChatRecord[] => {
+    return messages.map(msg => ({
+      ...msg,
+      user_id: msg.user_id,
+      user_name:msg.user_name,
+      room_id: msg.room_id,
+      sort: msg.sort,
+      sender: msg.sender,
+      message: msg.message,
+      createDate: msg.create_date,
+    }));
+  };
 
-const IndexPage: React.FC = () => {
-  const [roomList, setRoomList] = useState<RoomList[] | null>(null);
-  const [selectedChatName, setSelectedChatName] = useState<string | null>(null);
-  const [selectedChat, setSelectedChat] = useState<ChatRecord[] | null>(null);
-
+  // Fetch room list on component mount
   useEffect(() => {
-    const getRoomListAsync = async (): Promise<RoomList[] | null> => {
+    const fetchRooms = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5010/api/chat/get_room_list",
-          {
-            withCredentials: true, // 傳送 cookie
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        const rooms = response.data;
-        setRoomList(rooms);
-        console.log(`取得房間列表成功${rooms}`);
-        return rooms;
-      } catch (error) {
-        console.log(error);
+        const response = await chatService.getRoomList();
+        console.log(`[ChatService] Successfully fetched ${JSON.stringify(response)} `);
+        // Transform the room data to match the expected format
+        const formattedRooms: RoomList[] = response.rooms.map(room => ({
+          ...room,
+          room_id: room.room_id,
+          room_name: room.room_name
+        }));
+        setRoomList(formattedRooms);
+      } catch (err) {
+        console.error('Failed to fetch rooms:', err);
       }
-      return null;
     };
-    console.log(document.cookie);
-    getRoomListAsync();
+
+    fetchRooms();
+
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
+  
+
   const handleSelectChat = async (chatId: string) => {
-    const chat = roomList?.find((c) => c.room_id === chatId);
-    if (!chat) {
-      console.log("取得選取得聊天室失敗");
+    const room = roomList.find((c) => c.room_id === chatId);
+    if (!room) {
       return;
     }
-    console.log(`點擊聊天室成功${chat}`);
-    const record = await getChatRecordAsync(chat.room_id);
-    console.log(`取得聊天內容成功${chat}`);
-    setSelectedChatName(chat.room_name || null);
-    setSelectedChat(record || null);
+
+    try {
+      const response = await chatService.getChatRecords(chatId);
+      const formattedRecords = formatChatRecords(response.messages);
+      setSelectedChatName(room.room_name);
+      setSelectedChat(formattedRecords);
+    } catch (err) {
+      console.error('Failed to fetch chat records:', err);
+    }
   };
 
   return (
     <div className="container">
-      <ChatList chats={roomList} onSelectChat={handleSelectChat} />
-      <ChatMessages chat_name={selectedChatName} chat={selectedChat} />
+      <ChatList 
+        chats={roomList} 
+        onSelectChat={handleSelectChat} 
+      />
+      <ChatMessages 
+        chat_name={selectedChatName} 
+        chat={selectedChat} 
+      />
     </div>
   );
 };
 
-export default IndexPage;
+export default ChatPage;
