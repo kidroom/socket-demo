@@ -1,7 +1,7 @@
 // components/ChatList.tsx
 import "../styles/chat_list.css";
 import { useState } from "react";
-import { RoomList } from "../models/chat";
+import { RoomList } from "../models/chat_model";
 
 interface ChatListProps {
   chats: RoomList[] | null;

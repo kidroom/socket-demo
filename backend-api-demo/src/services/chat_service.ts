@@ -41,7 +41,7 @@ class ChatService {
       room_id: item.room_id,
       user_id: item.user_id,
       user_name: item.user?.name,
-      sender: item.user_id == verifiedPayload.userId ? 1 : 2,
+      sender: item.user_id == verifiedPayload.userId,
       sort: item.sort,
       message: item.message,
       create_date: item.createdAt,

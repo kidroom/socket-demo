@@ -25,7 +25,7 @@ io.on('connection', socket => {
     // 用戶登入
     socket.on("login", ({ userId, roomId }) => {
         onlineUsers.set(userId, socket.id);
-        
+
         // 加入房間
         if (roomId) {
             socket.join(roomId);
@@ -35,13 +35,16 @@ io.on('connection', socket => {
     });
 
     // 發送訊息到房間
-    socket.on("send_room_message", ({ roomId, sender, content, senderName }) => {
+    socket.on("send_room_message", ({ roomId, sender, senderId, senderName, receive, sort, content, timestamp }) => {
         console.log(`收到來自房間 ${roomId} 的訊息: ${content}`);
         io.to(roomId).emit("receive_room_message", {
             sender,
+            senderId,
             senderName,
+            receive,
+            sort,
             content,
-            timestamp: new Date().toISOString()
+            timestamp,
         });
     });
 

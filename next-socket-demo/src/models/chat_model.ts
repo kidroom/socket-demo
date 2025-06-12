@@ -8,7 +8,7 @@ export class ChatRecord {
   user_id: string;
   user_name: string;
   sort: number;
-  sender: number;
+  sender: boolean;
   message: string;
   create_date: Date;
 
@@ -17,7 +17,7 @@ export class ChatRecord {
     user_id: string;
     user_name: string;
     sort: number;
-    sender: number;
+    sender: boolean;
     message: string;
     create_date: Date;
   }) {

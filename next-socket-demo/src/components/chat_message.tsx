@@ -1,6 +1,6 @@
 import "../styles/chat_message.css";
 import { useState, FormEvent, useMemo, useEffect } from "react";
-import { ChatRecord } from "../models/chat";
+import { ChatRecord } from "../models/chat_model";
 import socket from "../utils/socket";
 import { useUserStore } from "../stores/userStore";
 import { ChatMessageModel } from "../models/socket_model";
@@ -8,15 +8,14 @@ import { ChatMessageModel } from "../models/socket_model";
 interface ChatMessagesProps {
   chat_name: string | null;
   chat: ChatRecord[] | null;
-  roomId?: string; // 新增 roomId 屬性
+  roomId: string;
 }
 
 interface MessageGroup {
-  id: number | string;
-  sender: string | number;
+  sender: boolean;
+  senderId: string;
   senderName: string;
   messages: {
-    id: number | string;
     text: string;
     time: string;
   }[];
@@ -41,7 +40,7 @@ const getInitials = (name: string): string => {
 const ChatMessages: React.FC<ChatMessagesProps> = ({
   chat_name,
   chat,
-  roomId = "default-room", // 預設房間ID
+  roomId,
 }) => {
   const [newMessage, setNewMessage] = useState<string>(""); //
   const [messages, setMessages] = useState<ChatMessageModel[]>([]);
@@ -53,22 +52,17 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
     const messageData = {
       roomId,
-      sender: user.id,
-      senderName: user.name || "匿名用戶",
+      sender: true,
+      senderId: user.id,
+      senderName: user.name,
+      receive: roomId,
+      sort: messages.length > 0 ? messages[messages.length - 1].sort + 1 : 1,
       content: message,
+      timestamp: new Date().toISOString(),
     };
 
     // 發送到 WebSocket 服務器
     socket.emit("send_room_message", messageData);
-
-    // 更新本地狀態
-    setMessages((prev) => [
-      ...prev,
-      {
-        ...messageData,
-        timestamp: new Date().toISOString(),
-      },
-    ]);
 
     setNewMessage("");
   };
@@ -99,7 +93,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       if (roomId) {
         socket.emit("leave_room", roomId);
       }
-      socket.disconnect();
     };
   }, [user, roomId]);
 
@@ -107,10 +100,11 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     // 合併歷史訊息和即時訊息
     const allMessages = [
       ...(chat?.map((c) => ({
-        id: c.sort || Date.now(),
         sender: c.sender,
-        senderName: c.user_name || "User",
+        senderId: c.user_id,
+        senderName: c.user_name,
         content: c.message,
+        sort: c.sort,
         timestamp: new Date(c.create_date).toISOString(),
       })) || []),
       ...messages.map((msg) => ({
@@ -145,8 +139,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
       if (isNewGroup) {
         groups.push({
-          id: message.id || `msg-${Date.now()}-${index}`,
           sender: message.sender,
+          senderId: message.senderId,
           senderName: message.senderName || "User",
           messages: [],
         });
@@ -155,7 +149,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       const currentGroup = groups[groups.length - 1];
       if (currentGroup) {
         currentGroup.messages.push({
-          id: message.id || `msg-${Date.now()}-${index}`,
           text: message.content,
           time: formatTime(message.timestamp || new Date()),
         });
@@ -189,12 +182,12 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       <div className="messageContainer">
         {groupedMessages.length > 0 ? (
           groupedMessages.map((group, groupIndex) => {
-            const isSent = group.sender === 1;
+            const isSent = group.sender;
             const avatarInitial = getInitials(group.senderName);
 
             return (
               <div
-                key={group.id || groupIndex}
+                key={groupIndex}
                 className={`messageWrapper ${isSent ? "sent" : "received"}`}
               >
                 {!isSent && <div className="avatar">{avatarInitial}</div>}
@@ -202,7 +195,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                   <div className="username">{group.senderName}</div>
                   <div className="messageBubble">
                     {group.messages.map((msg, msgIndex) => (
-                      <div key={msg.id || msgIndex} className="singleMessage">
+                      <div key={msgIndex} className="singleMessage">
                         <div className="messageText">{msg.text}</div>
                         <span className="messageTime">{msg.time}</span>
                       </div>

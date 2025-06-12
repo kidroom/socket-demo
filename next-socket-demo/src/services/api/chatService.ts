@@ -1,4 +1,4 @@
-import { apiClient } from '@/utils/apiClient';
+import { apiClient } from "@/utils/apiClient";
 
 // Types
 export interface ChatRoom {
@@ -10,10 +10,10 @@ export interface ChatMessage {
   user_id: string;
   user_name: string;
   room_id: string;
-  sender: number;
+  sender: boolean;
   sort: number;
   message: string;
-  create_date:Date;
+  create_date: Date;
 }
 
 export interface GetRoomListResponse {
@@ -41,12 +41,16 @@ export const chatService = {
    */
   getRoomList: async (): Promise<GetRoomListResponse> => {
     try {
-      console.log('[ChatService] Fetching chat room list');
-      const response = await apiClient.get<GetRoomListResponse>('/chat/get_room_list');
-      console.log(`[ChatService] Successfully fetched ${JSON.stringify(response.data)} `);
+      console.log("[getRoomList] Fetching chat room list");
+      const response = await apiClient.get<GetRoomListResponse>(
+        "/chat/get_room_list"
+      );
+      console.log(
+        `[getRoomList] Successfully fetched ${JSON.stringify(response.data)} `
+      );
       return response.data!;
     } catch (error) {
-      console.error('[ChatService] Failed to fetch chat room list:', error);
+      console.error("[getRoomList] Failed to fetch chat room list:", error);
       throw error;
     }
   },
@@ -58,26 +62,40 @@ export const chatService = {
    * @param before Fetch messages before this timestamp for pagination
    * @returns Chat messages and pagination info
    */
-  getChatRecords: async (roomId: string, limit?: number, before?: string): Promise<GetChatRecordsResponse> => {
+  getChatRecords: async (
+    roomId: string,
+    limit?: number,
+    before?: string
+  ): Promise<GetChatRecordsResponse> => {
     try {
-      console.log(`[ChatService] Fetching messages for room: ${roomId}`);
+      console.log(`[getChatRecords] Fetching messages for room: ${roomId}`);
       const params: GetChatRecordsRequest = { room_id: roomId };
-      
+
       if (limit) {
         params.limit = limit;
-        console.log(`[ChatService] Limiting to ${limit} messages`);
+        console.log(`[getChatRecords] Limiting to ${limit} messages`);
       }
-      
+
       if (before) {
         params.before = before;
-        console.log(`[ChatService] Fetching messages before: ${before}`);
+        console.log(`[getChatRecords] Fetching messages before: ${before}`);
       }
-      
-      const response = await apiClient.post<GetChatRecordsResponse>('/chat/get_chat_record', params);
-      console.log(`[ChatService] Successfully fetched ${response.data?.messages?.length || 0} messages`);
+
+      const response = await apiClient.post<GetChatRecordsResponse>(
+        "/chat/get_chat_record",
+        params
+      );
+      console.log(
+        `[getChatRecords] Successfully fetched ${
+          response.data?.messages?.length || 0
+        } messages`
+      );
       return response.data!;
     } catch (error) {
-      console.error(`[ChatService] Failed to fetch messages for room ${roomId}:`, error);
+      console.error(
+        `[getChatRecords] Failed to fetch messages for room ${roomId}:`,
+        error
+      );
       throw error;
     }
   },
@@ -89,15 +107,18 @@ export const chatService = {
    */
   sendMessage: async (roomId: string, message: string): Promise<void> => {
     try {
-      console.log(`[ChatService] Sending message to room: ${roomId}`);
-      await apiClient.post('/chat/send_message', {
+      console.log(`[sendMessage] Sending message to room: ${roomId}`);
+      await apiClient.post("/chat/send_message", {
         room_id: roomId,
-        message: message
+        message: message,
       });
-      console.log('[ChatService] Message sent successfully');
+      console.log("[sendMessage] Message sent successfully");
     } catch (error) {
-      console.error(`[ChatService] Failed to send message to room ${roomId}:`, error);
+      console.error(
+        `[sendMessage] Failed to send message to room ${roomId}:`,
+        error
+      );
       throw error;
     }
-  }
+  },
 };

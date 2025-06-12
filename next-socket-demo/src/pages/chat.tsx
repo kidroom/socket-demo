@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import ChatList from "../components/chat_list";
 import "../styles/chat.css";
 import { chatService } from "../services/api/chatService";
-import { RoomList, ChatRecord } from "../models/chat";
+import { RoomList, ChatRecord } from "../models/chat_model";
 import { ChatMessage } from "../services/api/chatService";
 import ChatMessages from "../components/chat_message";
 import socket from "@/utils/socket";
@@ -10,6 +10,7 @@ import socket from "@/utils/socket";
 const ChatPage: React.FC = () => {
   const [roomList, setRoomList] = useState<RoomList[]>([]);
   const [selectedChatName, setSelectedChatName] = useState<string>("");
+  const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [selectedChat, setSelectedChat] = useState<ChatRecord[]>([]);
 
   // Format chat records to match the expected format
@@ -32,10 +33,10 @@ const ChatPage: React.FC = () => {
       try {
         const response = await chatService.getRoomList();
         console.log(
-          `[ChatService] Successfully fetched ${JSON.stringify(response)} `
+          `[ChatPage] Successfully fetched ${JSON.stringify(response)} `
         );
         // Transform the room data to match the expected format
-        const formattedRooms: RoomList[] = response.rooms.map((room) => ({
+        const formattedRooms: RoomList[] = response?.rooms?.map((room) => ({
           ...room,
           room_id: room.room_id,
           room_name: room.room_name,
@@ -65,6 +66,7 @@ const ChatPage: React.FC = () => {
       const response = await chatService.getChatRecords(chatId);
       const formattedRecords = formatChatRecords(response.messages);
       setSelectedChatName(room.room_name);
+      setSelectedRoomId(room.room_id);
       setSelectedChat(formattedRecords);
     } catch (err) {
       console.error("Failed to fetch chat records:", err);
@@ -74,7 +76,11 @@ const ChatPage: React.FC = () => {
   return (
     <div className="container">
       <ChatList chats={roomList} onSelectChat={handleSelectChat} />
-      <ChatMessages chat_name={selectedChatName} chat={selectedChat} />
+      <ChatMessages
+        chat_name={selectedChatName}
+        chat={selectedChat}
+        roomId={selectedRoomId}
+      />
     </div>
   );
 };
