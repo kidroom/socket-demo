@@ -40,5 +40,18 @@
             "webRoot": "${workspaceFolder}/next-socket-demo",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
+        {
+            "name": "Backend Socket Demo",
+            "type": "node",
+            "request": "launch",
+            "runtimeArgs": ["-r", "ts-node/register"],
+            "args": ["${workspaceFolder}/nodejs-websocket-demo/server.ts"],
+            "cwd": "${workspaceFolder}/nodejs-websocket-demo",
+            "skipFiles": [ "<node_internals>/**"],
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "PORT": "5010"
+            }
+        },
     ]
 }
