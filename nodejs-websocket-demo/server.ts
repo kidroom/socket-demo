@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express, { Express, Request, Response } from 'express';
 import { createServer, Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import KafkaProducer from './src/kafka/producer';
 
 // Load environment variables
 dotenv.config({ path: "../.env" });
@@ -18,9 +19,28 @@ const io = new Server(server, {
     }
 });
 
+// 初始化 Kafka 生產者
+const kafkaProducer = KafkaProducer.getInstance();
+
 // Data structures for tracking users and rooms
 const onlineUsers: Map<string, string> = new Map(); // userId -> socketId
 const roomUsers: Map<string, string> = new Map();   // userId -> roomId
+
+// 連接 Kafka
+kafkaProducer.connect().catch(err => {
+    console.error('無法連接到 Kafka:', err);
+});
+
+// 處理程序退出時的清理
+process.on('SIGINT', async () => {
+    try {
+        await kafkaProducer.disconnect();
+        process.exit(0);
+    } catch (error) {
+        console.error('關閉 Kafka 連接時出錯:', error);
+        process.exit(1);
+    }
+});
 
 // Socket.IO connection handler
 io.on('connection', (socket: Socket) => {
@@ -40,7 +60,7 @@ io.on('connection', (socket: Socket) => {
     });
 
     // Handle sending messages to room
-    socket.on("send_room_message", (data: {
+    socket.on("send_room_message", async (data: {
         roomId: string;
         sender: boolean;
         senderId: string;
@@ -53,6 +73,25 @@ io.on('connection', (socket: Socket) => {
         const { roomId, sender, senderId, senderName, receive, sort, content, timestamp } = data;
         console.log(`收到來自房間 ${roomId} 的訊息: ${content}`);
         
+        // 發送到 Kafka
+        try {
+            await kafkaProducer.sendMessage('chat-messages', {
+                roomId,
+                sender,
+                senderId,
+                senderName,
+                receive,
+                sort,
+                content,
+                timestamp,
+                receivedAt: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('發送訊息到 Kafka 失敗:', error);
+            // 即使 Kafka 發送失敗，仍然繼續處理訊息廣播
+        }
+        
+        // 廣播訊息到房間
         io.to(roomId).emit("receive_room_message", {
             sender,
             senderId,

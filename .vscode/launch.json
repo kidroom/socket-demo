@@ -50,7 +50,7 @@
             "skipFiles": [ "<node_internals>/**"],
             "internalConsoleOptions": "openOnSessionStart",
             "env": {
-                "PORT": "5010"
+                "PORT": "3000"
             }
         },
     ]
