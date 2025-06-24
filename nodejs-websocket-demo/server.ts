@@ -3,6 +3,8 @@ import express, { Express, Request, Response } from 'express';
 import { createServer, Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import KafkaProducer from './src/kafka/producer';
+import { chat_message_topic } from './src/consts/kafkaTopicConst';
+import logger from './src/utils/logger';
 
 // Load environment variables
 dotenv.config({ path: "../.env" });
@@ -10,6 +12,18 @@ dotenv.config({ path: "../.env" });
 // Initialize Express app
 const app: Express = express();
 const server: HttpServer = createServer(app);
+
+// 添加請求日誌中間件
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info(`${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms`);
+  });
+  
+  next();
+});
 
 // CORS configuration
 const io = new Server(server, {
@@ -44,7 +58,11 @@ process.on('SIGINT', async () => {
 
 // Socket.IO connection handler
 io.on('connection', (socket: Socket) => {
-    console.log('New client connected:', socket.id);
+    logger.info(`New connection: ${socket.id}`);
+
+    socket.on('error', (error) => {
+        logger.error(`Socket error (${socket.id}):`, error);
+    });
 
     // User login handler
     socket.on("login", (data: { userId: string; roomId: string }) => {
@@ -56,7 +74,7 @@ io.on('connection', (socket: Socket) => {
             socket.join(roomId);
             roomUsers.set(userId, roomId);
         }
-        console.log(`User ${userId} logged in with socket ${socket.id}`);
+        logger.info(`User ${userId} logged in with socket ${socket.id}`);
     });
 
     // Handle sending messages to room
@@ -71,11 +89,11 @@ io.on('connection', (socket: Socket) => {
         timestamp: string;
     }) => {
         const { roomId, sender, senderId, senderName, receive, sort, content, timestamp } = data;
-        console.log(`收到來自房間 ${roomId} 的訊息: ${content}`);
+        logger.info(`收到來自房間 ${roomId} 的訊息: ${content}`);
         
         // 發送到 Kafka
         try {
-            await kafkaProducer.sendMessage('chat-messages', {
+            await kafkaProducer.sendMessage(chat_message_topic, {
                 roomId,
                 sender,
                 senderId,
@@ -106,18 +124,18 @@ io.on('connection', (socket: Socket) => {
     // Handle joining a room
     socket.on("join_room", (roomId: string) => {
         socket.join(roomId);
-        console.log(`用戶 ${socket.id} 加入了房間 ${roomId}`);
+        logger.info(`用戶 ${socket.id} 加入了房間 ${roomId}`);
     });
 
     // Handle leaving a room
     socket.on("leave_room", (roomId: string) => {
         socket.leave(roomId);
-        console.log(`用戶 ${socket.id} 離開了房間 ${roomId}`);
+        logger.info(`用戶 ${socket.id} 離開了房間 ${roomId}`);
     });
 
     // Handle disconnection
     socket.on("disconnect", () => {
-        console.log("用戶離線:", socket.id);
+        logger.info(`User disconnected: ${socket.id}`);
         // Remove user from online users and rooms
         for (const [key, value] of onlineUsers.entries()) {
             if (value === socket.id) {
@@ -136,7 +154,8 @@ io.on('connection', (socket: Socket) => {
 // Start the server
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 server.listen(PORT, () => {
-    console.log(`Socket.IO 服務器運行在 http://localhost:${PORT}`);
+    logger.info(`Server is running on port ${PORT}`);
+    logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 export default server;
