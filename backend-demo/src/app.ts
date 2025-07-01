@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import userRoute from "./routes/user_route";
 import chatRoute from "./routes/chat_route";
 import { apiResponseHandler } from "./middlewares/api_response_middleware";
+import logger, { requestLogger } from "./libs/logger";
 
 class App {
   public app: Application;
@@ -17,6 +18,9 @@ class App {
   }
 
   private middleware(): void {
+    // 添加請求日誌中間件
+    this.app.use(requestLogger);
+    
     // 定義允許的來源列表
     const allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
     this.app.use(
@@ -56,25 +60,39 @@ class App {
   /** 錯誤處理中介層，捕獲所有未被處理的錯誤
    */
   private exception_handle(): void {
+    // 404 處理
     this.app.use((req: Request, res: Response, next: NextFunction) => {
+      logger.warn(`路由不存在: ${req.method} ${req.originalUrl}`);
       res.apiError("API 路由不存在", 404, "NOT_FOUND");
     });
 
+    // 全局錯誤處理
     this.app.use(
-      (err: Error, req: Request, res: Response, next: NextFunction) => {
-        console.error("Global Error Handler:", err.stack);
-        if (res.headersSent) {
-          return next(err);
-        }
-
-        res.apiError("伺服器內部錯誤", 500, "INTERNAL_SERVER_ERROR", [
-          {
-            message:
-              process.env.NODE_ENV === "production"
-                ? "發生未知錯誤"
-                : err.message,
-          },
-        ]);
+      (err: any, req: Request, res: Response, next: NextFunction) => {
+        logger.error(`發生未處理的錯誤: ${err.message}`, { 
+          error: err.stack,
+          url: req.originalUrl,
+          method: req.method,
+          body: req.body,
+          params: req.params,
+          query: req.query
+        });
+        
+        // 使用統一的錯誤響應格式
+        const errorMessage = process.env.NODE_ENV === "production" 
+          ? "伺服器內部錯誤" 
+          : err.message;
+          
+        const errorDetails = process.env.NODE_ENV === "development"
+          ? [{ field: 'stack', message: err.stack }]
+          : undefined;
+          
+        res.apiError(
+          errorMessage,
+          500,
+          "INTERNAL_SERVER_ERROR",
+          errorDetails
+        );
       }
     );
   }

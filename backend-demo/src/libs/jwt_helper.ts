@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
 
-const secretKey =
-  "18bfaf64981d6ff162af44be0ae4086451b57b6f065343c862669963ae99aefd"; // 應使用 .env 儲存金鑰
-const expireSize = "1h";
+const secretKey = process.env.JWT_SECRET || "18bfaf64981d6ff162af44be0ae4086451b57b6f065343c862669963ae99aefd"; // 應使用 .env 儲存金鑰
+const expireSize = process.env.JWT_EXPIRES_IN || "1h";
 
 interface VerifiedTokenPayload {
   userId: string;
@@ -31,10 +30,14 @@ export function TryParseJwt(token: string): VerifiedTokenPayload | null {
   return verifiedPayload;
 }
 
-export function SignJwt(data: any): string {
-  const token = jwt.sign(data, secretKey, {
-    expiresIn: expireSize,
-  });
+export function SignJwt(data: object): string {
+  const token = jwt.sign(
+    data,
+    secretKey as jwt.Secret,
+    { 
+      expiresIn: expireSize,
+    } as jwt.SignOptions
+  );
 
   return token;
 }

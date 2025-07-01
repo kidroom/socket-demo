@@ -4,7 +4,7 @@ import { createServer, Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import KafkaProducer from './src/kafka/producer';
 import { chat_message_topic } from './src/consts/kafkaTopicConst';
-import logger from './src/utils/logger';
+import logger,{requestLogger} from './src/utils/logger';
 
 // Load environment variables
 dotenv.config({ path: "../.env" });
@@ -14,16 +14,7 @@ const app: Express = express();
 const server: HttpServer = createServer(app);
 
 // 添加請求日誌中間件
-app.use((req, res, next) => {
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    logger.info(`${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms`);
-  });
-  
-  next();
-});
+app.use(requestLogger);
 
 // CORS configuration
 const io = new Server(server, {

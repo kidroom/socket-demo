@@ -5,12 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Backend Login Demo",
+            "name": "Backend Demo",
             "type": "node",
             "request": "launch",
             "runtimeArgs": ["-r", "ts-node/register"],
-            "args": ["${workspaceFolder}/backend-api-demo/src/server.ts"],
-            "cwd": "${workspaceFolder}/backend-api-demo",
+            "args": ["${workspaceFolder}/backend-demo/src/server.ts"],
+            "cwd": "${workspaceFolder}/backend-demo",
             "skipFiles": [ "<node_internals>/**"],
             "internalConsoleOptions": "openOnSessionStart",
             "env": {

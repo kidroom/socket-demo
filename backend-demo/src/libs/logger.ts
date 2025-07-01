@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 
 // 確保日誌目錄存在
-const logDir = path.join(__dirname, '../../logs');
+const logDir = path.join(process.cwd(), 'logs');
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
@@ -35,7 +35,7 @@ const format = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
   winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`,
+    (info) => `${info.timestamp} [${info.level}]: ${info.message}`,
   ),
 );
 
@@ -45,12 +45,12 @@ const transports = [
   new winston.transports.Console({
     format: winston.format.combine(
       winston.format.colorize(),
-      winston.format.simple(),
+      format,
     ),
   }),
   // 錯誤日誌文件
   new winston.transports.DailyRotateFile({
-    filename: path.join(logDir, '/error/error-%DATE%.log'),
+    filename: path.join(logDir, 'error/error-%DATE%.log'),
     datePattern: 'YYYY-MM-DD',
     zippedArchive: true,
     maxSize: '20m',
@@ -59,7 +59,7 @@ const transports = [
   }),
   // 所有日誌文件
   new winston.transports.DailyRotateFile({
-    filename: path.join(logDir, '/all/all-%DATE%.log'),
+    filename: path.join(logDir, 'all/all-%DATE%.log'),
     datePattern: 'YYYY-MM-DD',
     zippedArchive: true,
     maxSize: '20m',
@@ -69,7 +69,7 @@ const transports = [
 
 // 創建日誌實例
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'debug',
+  level: process.env.LOG_LEVEL || 'info',
   levels,
   format,
   transports,
@@ -78,11 +78,11 @@ const logger = winston.createLogger({
 
 // 處理未捕獲的異常
 process.on('unhandledRejection', (reason) => {
-  logger.error('Unhandled Rejection at:', reason);
+  logger.error(`未處理的 Promise 拒絕: ${reason}`);
 });
 
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception thrown:', error);
+  logger.error(`未捕獲的異常: ${error.message}`, { error });
   process.exit(1);
 });
 
