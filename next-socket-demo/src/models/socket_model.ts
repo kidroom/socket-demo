@@ -1,11 +1,11 @@
 export interface ChatMessageModel {
+  roomId: string;
   sender: boolean;
   senderId: string;
   senderName: string;
   receive: string;
   content: string;
   timestamp: string | Date;
-  roomId: string;
   sort: number;
 }
 

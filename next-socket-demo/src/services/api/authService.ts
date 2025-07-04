@@ -7,7 +7,7 @@ export interface LoginRequest {
 }
 
 export interface UserProfile {
-  id: string | number;
+  id: string;
   account: string;
   name: string;
   email?: string | null;

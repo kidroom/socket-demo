@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\leon_huang\\source\\side_project\\socket-demo\\nodejs-websocket-demo\\logs\\all\\.be84b5bce94dcb43e341b6beffd9ecb55a25f601-audit.json",
+    "files": [
+        {
+            "date": 1751614602250,
+            "name": "C:\\Users\\leon_huang\\source\\side_project\\socket-demo\\nodejs-websocket-demo\\logs\\all\\all-2025-07-04.log",
+            "hash": "748fe1919bee4ce0f84c2ebfd1ff96bbcb9fb8f48b0bd58070c0469f2644d071"
+        }
+    ],
+    "hashType": "sha256"
+}

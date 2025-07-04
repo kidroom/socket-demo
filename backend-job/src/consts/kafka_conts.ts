@@ -1,0 +1,1 @@
+export const CHAT_MESSAGE_TOPIC = 'chat-messages';

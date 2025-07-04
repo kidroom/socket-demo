@@ -85,14 +85,11 @@ io.on('connection', (socket: Socket) => {
         // 發送到 Kafka
         try {
             await kafkaProducer.sendMessage(chat_message_topic, {
-                roomId,
-                sender,
-                senderId,
-                senderName,
-                receive,
-                sort,
-                content,
-                timestamp,
+                roomId: roomId,
+                senderId: senderId,
+                sort: sort,
+                content: content,
+                timestamp: timestamp,
                 receivedAt: new Date().toISOString()
             });
         } catch (error) {

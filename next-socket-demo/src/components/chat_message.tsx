@@ -87,6 +87,21 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
     socket.on("receive_room_message", handleNewMessage);
 
+    //設定聊天訊息
+    setMessages((prev) => [
+      ...prev,
+      ...(chat?.map((c) => ({
+        roomId: c.room_id,
+        sender: c.sender,
+        senderId: c.user_id,
+        senderName: c.user_name,
+        receive: c.room_id,
+        content: c.message,
+        sort: c.sort,
+        timestamp: new Date(c.create_date).toISOString(),
+      })) || []),
+    ]);
+
     // 清理函數
     return () => {
       socket.off("receive_room_message", handleNewMessage);
@@ -99,14 +114,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   const groupedMessages = useMemo(() => {
     // 合併歷史訊息和即時訊息
     const allMessages = [
-      ...(chat?.map((c) => ({
-        sender: c.sender,
-        senderId: c.user_id,
-        senderName: c.user_name,
-        content: c.message,
-        sort: c.sort,
-        timestamp: new Date(c.create_date).toISOString(),
-      })) || []),
       ...messages.map((msg) => ({
         ...msg,
         timestamp: msg.timestamp || new Date().toISOString(),

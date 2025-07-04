@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\leon_huang\\source\\side_project\\socket-demo\\backend-api-demo\\logs\\all\\.10c7eda122646f2add281dc63ce3fbfeab5a9e15-audit.json",
+    "files": [
+        {
+            "date": 1751614811153,
+            "name": "C:\\Users\\leon_huang\\source\\side_project\\socket-demo\\backend-api-demo\\logs\\all\\all-2025-07-04.log",
+            "hash": "f9fde20c7353641f62cc73cbb858033ee407a6aaf1b33601893f8a92028ebf87"
+        }
+    ],
+    "hashType": "sha256"
+}
