@@ -1,5 +1,6 @@
 import { Kafka, Producer, ProducerRecord } from 'kafkajs';
 import dotenv from 'dotenv';
+import logger from '../utils/logger';
 
 // 載入環境變數
 dotenv.config({ path: "../../.env" });
@@ -27,9 +28,9 @@ class KafkaProducer {
     public async connect(): Promise<void> {
         try {
             await this.producer.connect();
-            console.log('Kafka Producer 已連接');
+            logger.info('Kafka Producer 已連接');
         } catch (error) {
-            console.error('Kafka Producer 連接錯誤:', error);
+            logger.error('Kafka Producer 連接錯誤:', error);
             throw error;
         }
     }
@@ -44,9 +45,9 @@ class KafkaProducer {
             };
             
             await this.producer.send(record);
-            console.log(`訊息已發送到 Kafka 主題 ${topic}`);
+            logger.info(`訊息已發送到 Kafka 主題 ${topic}`);
         } catch (error) {
-            console.error('發送訊息到 Kafka 時出錯:', error);
+            logger.error('發送訊息到 Kafka 時出錯:', error);
             throw error;
         }
     }
@@ -54,9 +55,9 @@ class KafkaProducer {
     public async disconnect(): Promise<void> {
         try {
             await this.producer.disconnect();
-            console.log('Kafka Producer 已斷開連接');
+            logger.info('Kafka Producer 已斷開連接');
         } catch (error) {
-            console.error('斷開 Kafka Producer 連接時出錯:', error);
+            logger.error('斷開 Kafka Producer 連接時出錯:', error);
             throw error;
         }
     }

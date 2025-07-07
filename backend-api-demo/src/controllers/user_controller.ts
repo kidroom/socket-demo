@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import user_service from "../services/user_service";
 import auth_service from "../services/auth_service";
 import { MyCustomActionFilter, LogActionFilter } from "../utils/filter";
+import logger from "../utils/logger";
 
 class UserController {
   /** 使用者註冊
@@ -39,7 +40,7 @@ class UserController {
     const cookies = req.cookies;
     const user_agent = req.headers["user-agent"];
     if (await auth_service.CheckTokenAsync(cookies["token"], user_agent)) {
-      console.log(`already have token`);
+      logger.info(`already have token`);
       res.json({ message: cookies["token"] });
       return;
     }

@@ -3,7 +3,7 @@ import { MessagePayload } from "../models/chat_request";
 import logger from "../utils/logger";
 
 export function CreateChatRoomRecord(message: MessagePayload): ChatRoomRecord {
-  console.log('原始訊息內容:', JSON.stringify(message, null, 2));
+  logger.info('原始訊息內容:', JSON.stringify(message, null, 2));
   
   const value = message.value;
   if (!value) {
