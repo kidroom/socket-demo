@@ -1,5 +1,6 @@
 import { ChatRoomRecord } from "../../database/models/chat_room_record";
 import { MessagePayload } from "../models/chat_request";
+import logger from "../utils/logger";
 
 export function CreateChatRoomRecord(message: MessagePayload): ChatRoomRecord {
   console.log('原始訊息內容:', JSON.stringify(message, null, 2));
@@ -7,7 +8,7 @@ export function CreateChatRoomRecord(message: MessagePayload): ChatRoomRecord {
   const value = message.value;
   if (!value) {
     throw new Error('訊息內容不能為空');
-  }
+  } 
 
   // 檢查必要欄位
   if (!value.roomId) throw new Error('缺少必要欄位: roomId');
@@ -23,6 +24,6 @@ export function CreateChatRoomRecord(message: MessagePayload): ChatRoomRecord {
   chatRoomRecord.message = value.content;
   chatRoomRecord.createdAt = new Date(value.timestamp || Date.now());
 
-  console.log('轉換後的聊天記錄:', JSON.stringify(chatRoomRecord, null, 2));
+  logger.info('轉換後的聊天記錄:', JSON.stringify(chatRoomRecord, null, 2));
   return chatRoomRecord;
 }

@@ -4,6 +4,7 @@ import { ChatRoom } from "../../database/models/chat_room";
 import { ChatRoomRecord } from "../../database/models/chat_room_record";
 import { ChatRoomRelativeUser } from "../../database/models/chat_room_relative_user";
 import { User } from "../../database/models/user";
+import logger from "../utils/logger";
 
 class ChatRepository {
   /** 查詢使用者
@@ -15,7 +16,7 @@ class ChatRepository {
   ): Promise<ChatRoomRelativeUser[] | null> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
       const rooms = await ChatRoomRelativeUser.findAll({
         include: [
           {
@@ -32,7 +33,7 @@ class ChatRepository {
       });
       return rooms;
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       return null;
     } finally {
       // 可選：在應用程式結束時關閉連線
@@ -47,7 +48,7 @@ class ChatRepository {
   async GetChatContentAsync(room_id: string): Promise<ChatRoomRecord[] | null> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
       const rooms = await ChatRoomRecord.findAll({
         include: [
           {
@@ -65,7 +66,7 @@ class ChatRepository {
       });
       return rooms;
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       return null;
     } finally {
       // 可選：在應用程式結束時關閉連線
@@ -75,8 +76,8 @@ class ChatRepository {
 
   async SetChatMessageAsync(message: ChatRoomRecord): Promise<void> {
     try {
-      console.log('開始儲存聊天訊息...');
-      console.log('訊息內容:', JSON.stringify(message, null, 2));
+      logger.info('開始儲存聊天訊息...');
+      logger.info('訊息內容:', JSON.stringify(message, null, 2));
       
       // 驗證必填欄位
       const requiredFields = ['room_id', 'user_id', 'sort', 'message'];
@@ -87,7 +88,7 @@ class ChatRepository {
       }
       
       await db.sequelize.authenticate();
-      console.log('資料庫連線成功');
+      logger.info('資料庫連線成功');
       
       const createdRecord = await ChatRoomRecord.create({
         room_id: message.room_id,
@@ -98,15 +99,15 @@ class ChatRepository {
         createdAt: message.createdAt || new Date()
       });
       
-      console.log('訊息儲存成功，ID:', createdRecord.id);
+      logger.info('訊息儲存成功，ID:', createdRecord.id);
       return;
     } catch (error: unknown) {
-      console.error('儲存聊天訊息時發生錯誤:');
+      logger.error('儲存聊天訊息時發生錯誤:');
       if (error instanceof Error) {
-        console.error('錯誤訊息:', error.message);
-        console.error('錯誤堆疊:', error.stack);
+        logger.error('錯誤訊息:', error.message);
+        logger.error('錯誤堆疊:', error.stack);
       } else {
-        console.error('發生未知錯誤:', error);
+        logger.error('發生未知錯誤:', error);
       }
       throw error; // 重新拋出錯誤，讓上層處理
     }

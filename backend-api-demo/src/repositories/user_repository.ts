@@ -3,7 +3,7 @@ import db from "../utils/database";
 import { User } from "../../database/models/user";
 import { AuthToken } from "../../database/models/auth_token";
 import { UserStatus } from "../utils/db_enum";
-import { TokenExpiredError } from "jsonwebtoken";
+import logger from "../utils/logger";
 
 class UserRepository {
   /** 查詢使用者
@@ -13,12 +13,12 @@ class UserRepository {
   async QueryUserAsync(id: number): Promise<User | null> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
       const user = await User.findByPk(id);
-      console.log("查詢使用者:", user ? user.toJSON() : "使用者不存在");
+      logger.info("查詢使用者:", user ? user.toJSON() : "使用者不存在");
       return user;
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       return null;
     } finally {
       // 可選：在應用程式結束時關閉連線
@@ -33,7 +33,7 @@ class UserRepository {
   async QueryExistUserByAccountAsync(account: string): Promise<User | null> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
       const user = await User.findOne({
         where: {
           [Op.and]: [
@@ -52,7 +52,7 @@ class UserRepository {
       });
       return user;
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       return null;
     } finally {
       // 可選：在應用程式結束時關閉連線
@@ -77,7 +77,7 @@ class UserRepository {
   ): Promise<User> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
       const newUser = await User.create({
         account: account,
         password: password,
@@ -86,10 +86,10 @@ class UserRepository {
         phone: phone,
         status: UserStatus.Activity,
       });
-      console.log("建立使用者:", newUser.toJSON());
+      logger.info("建立使用者:", newUser.toJSON());
       return newUser;
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       throw error;
     } finally {
       // 可選：在應用程式結束時關閉連線
@@ -104,18 +104,18 @@ class UserRepository {
   async UpdateUserAsync(user: User): Promise<[number, User[]]> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
       const [affectedCount, updatedUsers] = await User.update(
         { name: "Johnny Doe" }, // 注意：這裡的更新資料是寫死的
         { where: { id: user.id }, returning: true }
       );
-      console.log(
+      logger.info(
         "更新使用者:",
         updatedUsers.map((u) => u.toJSON())
       );
       return [affectedCount, updatedUsers];
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       throw error;
     } finally {
       // 可選：在應用程式結束時關閉連線
@@ -130,14 +130,14 @@ class UserRepository {
   async DeleteUsersAsync(user: User): Promise<number> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
       const deletedRowCount = await User.destroy({
         where: { id: user.id },
       });
-      console.log("使用者已刪除:", deletedRowCount > 0);
+      logger.info("使用者已刪除:", deletedRowCount > 0);
       return deletedRowCount;
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       throw error;
     } finally {
       // 可選：在應用程式結束時關閉連線
@@ -152,7 +152,7 @@ class UserRepository {
   ): Promise<AuthToken[] | null> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
 
       const now = new Date();
       const model = await AuthToken.findAll({
@@ -181,10 +181,10 @@ class UserRepository {
           ],
         },
       });
-      console.log("紀錄token:", JSON.stringify(model, null, 2));
+      logger.info("紀錄token:", JSON.stringify(model, null, 2));
       return model;
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       throw error;
     } finally {
       // 可選：在應用程式結束時關閉連線
@@ -207,17 +207,17 @@ class UserRepository {
   ): Promise<AuthToken | null> {
     try {
       await db.sequelize.authenticate();
-      console.log("資料庫連線成功！");
+      logger.info("資料庫連線成功！");
       const model = await AuthToken.create({
         user_id: id,
         token: token,
         device: device,
         expired_date: expired_date,
       });
-      console.log("紀錄token:", model.toJSON());
+      logger.info("紀錄token:", model.toJSON());
       return model;
     } catch (error) {
-      console.error("無法連線到資料庫:", error);
+      logger.error("無法連線到資料庫:", error);
       throw error;
     } finally {
       // 可選：在應用程式結束時關閉連線

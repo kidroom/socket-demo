@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import logger from "./logger";
 
 const SALT_ROUNDS = 10; // 定義鹽的輪數，數值越高越安全但耗時越長
 
@@ -13,7 +14,7 @@ export async function HashPasswordAsync(password: string): Promise<string> {
     const hash = await bcrypt.hash(password, salt);
     return hash;
   } catch (error) {
-    console.error("密碼雜湊失敗:", error);
+    logger.error("密碼雜湊失敗:", error);
     throw error;
   }
 }
@@ -32,7 +33,7 @@ export async function ComparePasswordAsync(
     const match = await bcrypt.compare(password, hashedPassword);
     return match;
   } catch (error) {
-    console.error("密碼比較失敗:", error);
+    logger.error("密碼比較失敗:", error);
     throw error;
   }
 }
