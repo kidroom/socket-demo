@@ -47,35 +47,46 @@ class ConsumerService {
     }
   }
 
-  public async subscribe(topics: string | string[]): Promise<void> {
+  public async subscribe(
+    topics: string | string[], 
+    options: { fromBeginning?: boolean } = { fromBeginning: true }
+  ): Promise<void> {
     const topicArray = Array.isArray(topics) ? topics : [topics];
     
     try {
-      await this.consumer.subscribe({ topics: topicArray, fromBeginning: false });
-      logger.info(`已訂閱主題: ${topicArray.join(', ')}`);
+      // 如果 fromBeginning 為 true，則從最早的 offset 開始消費
+      // 如果為 false 或未指定，則從上次提交的 offset 開始消費
+      await this.consumer.subscribe({ 
+        topics: topicArray, 
+        fromBeginning: options.fromBeginning 
+      });
+      
+      // 確保 consumer 組的 offset 被正確管理
+      await this.consumer.run({
+        autoCommit: true,
+        autoCommitInterval: 5000, // 每 5 秒自動提交一次 offset
+        autoCommitThreshold: 100, // 每處理 100 條消息自動提交一次 offset
+        eachMessage: async (payload: EachMessagePayload) => {
+          const { topic, partition, message } = payload;
+          const handler = this.messageHandlers.get(topic);
+
+          if (handler) {
+            try {
+              await handler(message);
+            } catch (error) {
+              logger.error(`處理消息時出錯 (topic: ${topic}, partition: ${partition}):`, error);
+            }
+          } else {
+            logger.warn(`沒有找到對應的處理器 (topic: ${topic})`);
+          }
+        },
+      });
+      
+      logger.info(`已訂閱主題: ${topicArray.join(', ')}, fromBeginning: ${options.fromBeginning}`);
     } catch (error) {
       logger.error('訂閱主題錯誤:', error);
       throw error;
     }
-  }
-
-  public async run(): Promise<void> {
-    await this.consumer.run({
-      eachMessage: async (payload: EachMessagePayload) => {
-        const { topic, partition, message } = payload;
-        const handler = this.messageHandlers.get(topic);
-
-        if (handler) {
-          try {
-            await handler(message);
-          } catch (error) {
-            logger.error(`處理消息時出錯 (topic: ${topic}, partition: ${partition}):`, error);
-          }
-        } else {
-          logger.warn(`沒有找到對應的處理器 (topic: ${topic})`);
-        }
-      },
-    });
   }
 
   public registerHandler(topic: string, handler: (message: KafkaMessage) => Promise<void>): void {

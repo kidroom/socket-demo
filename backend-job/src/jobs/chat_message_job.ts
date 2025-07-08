@@ -47,7 +47,6 @@ class ChatMessageJob {
     try {
       await consumerService.connect();
       await consumerService.subscribe([CHAT_MESSAGE_TOPIC]);
-      await consumerService.run();
       
       this.isRunning = true;
       logger.info(`ChatMessageJob 已啟動，正在監聽主題: ${CHAT_MESSAGE_TOPIC}`);
