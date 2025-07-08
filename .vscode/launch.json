@@ -23,7 +23,7 @@
             "request": "launch",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run", "dev"],
-            "cwd": "${workspaceFolder}/next-socket-demo",
+            "cwd": "${workspaceFolder}/frontend-chat-next-demo",
             "console": "integratedTerminal",
             "skipFiles": ["<node_internals>/**"],
             "outputCapture": "std",
@@ -37,7 +37,7 @@
             "type": "chrome", // 針對 Chrome 瀏覽器
             "request": "launch",
             "url": "http://localhost:3001", // Next.js 開發伺服器的預設端口
-            "webRoot": "${workspaceFolder}/next-socket-demo",
+            "webRoot": "${workspaceFolder}/frontend-chat-next-demo",
             "skipFiles": ["<node_internals>/**", "node_modules/**"]
         },
         {

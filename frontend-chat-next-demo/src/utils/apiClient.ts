@@ -4,9 +4,9 @@ import axios, {
   AxiosResponse,
   AxiosError,
 } from "axios";
-import { ApiResponse, ApiError } from "@/types/api";
+import { ApiResponse, ApiError } from "../types/api";
 import Cookies from "js-cookie";
-import { useUserStore } from "@/stores/userStore";
+import { useUserStore } from "../stores/userStore";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5010/api";

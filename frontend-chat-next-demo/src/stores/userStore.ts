@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { StorageManager } from './storage';
-import Cookies from 'js-cookie';
+import Cookies from '../../node_modules/@types/js-cookie';
 
 // Types
 export interface User {

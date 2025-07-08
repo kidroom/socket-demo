@@ -217,22 +217,24 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           <div className="emptyState">沒有訊息</div>
         )}
       </div>
-      <form onSubmit={handleSendMessage} className="inputForm">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="輸入訊息..."
-        />
-        <button
-          type="submit"
-          disabled={!newMessage.trim()}
-          aria-label="Send message"
-          onClick={() => sendMessage(newMessage)}
-        >
-          送
-        </button>
-      </form>
+      {roomId && (
+        <form onSubmit={handleSendMessage} className="inputForm">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="輸入訊息..."
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim()}
+            aria-label="Send message"
+            onClick={() => sendMessage(newMessage)}
+          >
+            送
+          </button>
+        </form>
+      )}
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { chatService } from "../services/api/chatService";
 import { RoomList, ChatRecord } from "../models/chat_model";
 import { ChatMessage } from "../services/api/chatService";
 import ChatMessages from "../components/chat_message";
-import socket from "@/utils/socket";
+import socket from "../utils/socket";
 
 const ChatPage: React.FC = () => {
   const [roomList, setRoomList] = useState<RoomList[]>([]);

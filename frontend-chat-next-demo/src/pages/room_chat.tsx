@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import socket from "@/utils/socket";
-import { ChatMessageModel } from "@/types/socket";
+import socket from "../utils/socket";
+import { ChatMessageModel } from "../types/socket";
 
 export default function Home() {
   const [messages, setMessages] = useState<ChatMessageModel[]>([]);

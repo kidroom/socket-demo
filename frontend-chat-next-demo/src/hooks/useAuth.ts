@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useUserStore } from '@/stores';
+import { useUserStore } from '../stores/userStore';
 
 export const useAuth = (redirectTo: string = '/chat_login') => {
   const router = useRouter();
