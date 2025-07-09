@@ -31,12 +31,9 @@ export interface GetChatRecordsResponse {
   hasMore: boolean;
 }
 
-/**
- * Chat service for handling chat-related operations
- */
+/** Chat service for handling chat-related operations */
 export const chatService = {
-  /**
-   * Get list of available chat rooms
+  /** Get list of available chat rooms
    * @returns List of chat rooms
    */
   getRoomList: async (): Promise<GetRoomListResponse> => {
@@ -55,8 +52,7 @@ export const chatService = {
     }
   },
 
-  /**
-   * Get chat records for a specific room
+  /** Get chat records for a specific room
    * @param roomId ID of the chat room
    * @param limit Maximum number of messages to return
    * @param before Fetch messages before this timestamp for pagination
@@ -100,8 +96,7 @@ export const chatService = {
     }
   },
 
-  /**
-   * Send a message to a chat room
+  /** Send a message to a chat room
    * @param roomId ID of the chat room
    * @param message Message content
    */
